@@ -1,12 +1,15 @@
 "use client";
+import ShinyButton from "@/components/ShinyButton";
 import { motion } from "framer-motion";
-import ShinyButton from "./ShinyButton";
+import { useState } from "react";
 
 export default function Hero() {
+  const [showDemo, setShowDemo] = useState(false);
+
   return (
     <section className="relative overflow-hidden px-6 py-24 text-center">
       <motion.h1
-        initial={{ opacity: 0, y: 20 }}
+        initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
         className="mx-auto max-w-3xl text-5xl md:text-6xl font-extrabold"
@@ -23,16 +26,40 @@ export default function Hero() {
         transition={{ delay: 0.2, duration: 0.6 }}
         className="mx-auto mt-6 max-w-2xl text-lg text-zinc-300"
       >
-        Reenvía un mensaje, audio o email sospechoso. Nuestra IA detecta si es
-        una estafa y te da recomendaciones claras en segundos.
+        Reenvía un mensaje, audio o email sospechoso. Te decimos si es estafa y
+        qué hacer.
       </motion.p>
 
       <div className="mt-8 flex items-center justify-center gap-4">
-        <ShinyButton href="#pricing">Comienza Gratis</ShinyButton>
-        <a className="text-zinc-300 hover:text-white" href="#demo">
-          Ver demo (60s)
-        </a>
+        <ShinyButton href="#pricing">Start Free Trial</ShinyButton>
+        <button
+          onClick={() => setShowDemo(true)}
+          className="text-zinc-300 hover:text-white flex items-center gap-2"
+        >
+          ▶️ Watch 60s Demo
+        </button>
       </div>
+
+      {showDemo && (
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50">
+          <div className="relative w-[90%] max-w-2xl bg-zinc-900 rounded-2xl p-4">
+            <button
+              onClick={() => setShowDemo(false)}
+              className="absolute top-3 right-3 text-zinc-400 hover:text-white"
+            >
+              ✖
+            </button>
+            <div className="aspect-video">
+              <iframe
+                className="w-full h-full rounded-xl"
+                src="https://www.youtube.com/embed/xxxxxxxx"
+                title="Demo video"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              ></iframe>
+            </div>
+          </div>
+        </div>
+      )}
     </section>
   );
 }

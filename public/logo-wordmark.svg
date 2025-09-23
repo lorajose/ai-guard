@@ -1,0 +1,25 @@
+<svg width="480" height="128" viewBox="0 0 480 128" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="w1" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#ffb457"/>
+      <stop offset="1" stop-color="#ff6b2c"/>
+    </linearGradient>
+  </defs>
+  <!-- icono reducido -->
+  <g transform="translate(8,8) scale(0.42)">
+    <path d="M128 20c36 18 72 18 108 0v92c0 59-43 94-108 124C63 206 20 171 20 112V20c36 18 72 18 108 0Z" fill="url(#w1)"/>
+    <rect x="88" y="96" width="80" height="64" rx="12" fill="rgba(0,0,0,0.75)"/>
+    <path d="M104 96v-8c0-13.3 10.7-24 24-24h0c13.3 0 24 10.7 24 24v8" stroke="white" stroke-width="10" stroke-linecap="round"/>
+    <g fill="white">
+      <rect x="104" y="112" width="8" height="32" rx="2"/>
+      <path d="M140 144h-8l-3-8h-12l-3 8h-8l14-32h6l14 32Zm-14-14-4-10-4 10h8Z"/>
+    </g>
+  </g>
+  <!-- wordmark -->
+  <text x="150" y="86" font-family="Inter, ui-sans-serif, system-ui" font-size="56" font-weight="800" fill="#ffffff" letter-spacing="0.5">
+    AI <tspan fill="url(#w1)">Guard</tspan>
+  </text>
+  <text x="150" y="110" font-family="Inter, ui-sans-serif, system-ui" font-size="14" fill="#bcbcbc" letter-spacing="1.2">
+    Stop AI-powered scams in seconds
+  </text>
+</svg>
