@@ -1,24 +1,40 @@
 "use client";
+
+import { createClient } from "@/lib/supabase/client";
 import { motion } from "framer-motion";
 import { useState } from "react";
 
 export default function Pricing() {
   const [mode, setMode] = useState<"lite" | "pro">("lite");
   const [loading, setLoading] = useState(false);
+  const supabase = createClient();
 
   async function handleCheckout(plan: "LITE" | "PRO") {
     setLoading(true);
     try {
+      // 1. Obtener sesión actual
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      if (!session) {
+        window.location.href = "/login";
+        return;
+      }
+
+      // 2. Enviar fetch con Authorization Bearer
       const res = await fetch("/api/checkout/start", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session.access_token}`,
+        },
         body: JSON.stringify({ plan }),
       });
 
       const { url, error } = await res.json();
       if (error || !url) throw new Error(error || "Checkout error");
 
-      window.location.href = url; // redirige al Checkout Session
+      window.location.href = url; // Redirige a Stripe
     } catch (err) {
       console.error("Checkout error:", err);
       alert("Error iniciando el checkout.");
