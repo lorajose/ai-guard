@@ -1,11 +1,12 @@
 "use client";
+import AuthModal from "@/components/AuthModal"; // 👈 importamos el modal
 import Logo from "@/components/Logo";
 
 export default function Navbar() {
   return (
     <header className="sticky top-0 z-40 bg-black/30 backdrop-blur border-b border-zinc-800 supports-[backdrop-filter]:bg-black/40">
       <div className="mx-auto max-w-6xl px-6 h-14 flex items-center justify-between">
-        {/* Logo con animación */}
+        {/* Logo */}
         <Logo />
 
         {/* Menú desktop */}
@@ -25,10 +26,16 @@ export default function Navbar() {
           >
             Ver demo
           </a>
+          {/* 👇 Botón de login/registro */}
+          <AuthModal triggerText="Login / Registro" />
         </nav>
 
-        {/* Menú móvil (placeholder por ahora) */}
-        <div className="md:hidden text-zinc-300">☰</div>
+        {/* Menú móvil */}
+        <div className="md:hidden flex items-center gap-3 text-zinc-300">
+          {/* Botón también disponible en móvil */}
+          <AuthModal triggerText="Entrar" />
+          <span className="cursor-pointer">☰</span>
+        </div>
       </div>
     </header>
   );
