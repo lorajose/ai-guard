@@ -1,18 +1,31 @@
 "use client";
-import { loadStripe } from "@stripe/stripe-js";
 import { motion } from "framer-motion";
 import { useState } from "react";
 
-const stripePromise = loadStripe(
-  process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!
-);
-
 export default function Pricing() {
   const [mode, setMode] = useState<"lite" | "pro">("lite");
+  const [loading, setLoading] = useState(false);
 
-  // Cargamos los links de Stripe desde .env
-  const liteLink = process.env.NEXT_PUBLIC_STRIPE_LINK_LITE || "#";
-  const proLink = process.env.NEXT_PUBLIC_STRIPE_LINK_PRO || "#";
+  async function handleCheckout(plan: "LITE" | "PRO") {
+    setLoading(true);
+    try {
+      const res = await fetch("/api/checkout/start", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ plan }),
+      });
+
+      const { url, error } = await res.json();
+      if (error) throw new Error(error);
+
+      window.location.href = url; // redirige al Checkout Session
+    } catch (err) {
+      console.error("Checkout error:", err);
+      alert("Error iniciando el checkout.");
+    } finally {
+      setLoading(false);
+    }
+  }
 
   return (
     <section id="pricing" className="px-6 py-20 text-center">
@@ -60,7 +73,8 @@ export default function Pricing() {
             "Consejos claros haz/no hagas",
             "Alertas Email/Telegram",
           ]}
-          cta={liteLink}
+          onClick={() => handleCheckout("LITE")}
+          loading={loading}
         />
       ) : (
         <Card
@@ -72,7 +86,8 @@ export default function Pricing() {
             "Alertas Slack/Email",
             "Onboarding 15 min",
           ]}
-          cta={proLink}
+          onClick={() => handleCheckout("PRO")}
+          loading={loading}
         />
       )}
     </section>
@@ -83,12 +98,14 @@ function Card({
   title,
   price,
   bullets,
-  cta,
+  onClick,
+  loading,
 }: {
   title: string;
   price: string;
   bullets: string[];
-  cta: string;
+  onClick: () => void;
+  loading: boolean;
 }) {
   return (
     <motion.div
@@ -107,13 +124,13 @@ function Card({
           </li>
         ))}
       </ul>
-      <a
-        href={cta}
-        target="_blank"
-        className="mt-8 inline-block rounded-xl bg-white text-black px-6 py-3 font-semibold hover:scale-105 transition"
+      <button
+        onClick={onClick}
+        disabled={loading}
+        className="mt-8 inline-block rounded-xl bg-white text-black px-6 py-3 font-semibold hover:scale-105 transition disabled:opacity-50"
       >
-        Start Free Trial
-      </a>
+        {loading ? "Procesando..." : "Start Free Trial"}
+      </button>
     </motion.div>
   );
 }

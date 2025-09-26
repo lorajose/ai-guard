@@ -6,7 +6,7 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: "2025-08-27.basil",
 });
 
-export async function POST(req: any) {
+export async function POST(req: Request) {
   try {
     const { plan } = await req.json(); // 'LITE' | 'PRO'
     const priceId =
@@ -14,8 +14,7 @@ export async function POST(req: any) {
         ? process.env.STRIPE_PRICE_ID_PRO!
         : process.env.STRIPE_PRICE_ID_LITE!;
 
-    // Autenticación de usuario (ejemplo: token de Supabase en cookies)
-    // Si usas @supabase/auth-helpers-nextjs, puedes obtener el user de la request.
+    // Autenticación de usuario (ejemplo con Supabase)
     const supabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -29,16 +28,17 @@ export async function POST(req: any) {
     const {
       data: { user },
     } = await supabase.auth.getUser();
-    if (!user)
-      return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
 
-    // Creamos/reciclamos customer en Stripe (lo guardamos en subscriptions vía webhook)
+    if (!user) {
+      return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+    }
+
+    // Crear Checkout Session
     const session = await stripe.checkout.sessions.create({
       mode: "subscription",
       line_items: [{ price: priceId, quantity: 1 }],
-      payment_method_types: ["card"],
-      success_url: `${req.nextUrl.origin}/dashboard?status=success`,
-      cancel_url: `${req.nextUrl.origin}/pricing?status=cancelled`,
+      success_url: `${req.headers.get("origin")}/dashboard?status=success`,
+      cancel_url: `${req.headers.get("origin")}/pricing?status=cancelled`,
       metadata: {
         supabase_user_id: user.id,
         plan,
