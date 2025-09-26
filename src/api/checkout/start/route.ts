@@ -1,12 +1,12 @@
 import { createClient } from "@supabase/supabase-js";
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import Stripe from "stripe";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: "2025-08-27.basil",
 });
 
-export async function POST(req: NextRequest) {
+export async function POST(req: any) {
   try {
     const { plan } = await req.json(); // 'LITE' | 'PRO'
     const priceId =
