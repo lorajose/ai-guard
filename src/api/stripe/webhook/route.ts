@@ -1,10 +1,10 @@
 import { supabaseAdmin } from "@/lib/supabase";
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import Stripe from "stripe";
 
 export const runtime = "nodejs"; // para uso de raw body si usas edge cambia según hosting
 
-export async function POST(req: NextRequest) {
+export async function POST(req: any) {
   const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
     apiVersion: "2025-08-27.basil",
   });
