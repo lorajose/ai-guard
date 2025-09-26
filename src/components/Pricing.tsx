@@ -16,7 +16,7 @@ export default function Pricing() {
       });
 
       const { url, error } = await res.json();
-      if (error) throw new Error(error);
+      if (error || !url) throw new Error(error || "Checkout error");
 
       window.location.href = url; // redirige al Checkout Session
     } catch (err) {
