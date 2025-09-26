@@ -1,0 +1,20 @@
+// src/app/api/check/route.ts
+import { NextResponse } from 'next/server'
+import { supabaseServer } from '@/lib/auth-helpers'
+
+export async function POST(req: Request) {
+  const supabase = supabaseServer()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return NextResponse.json({ error: 'Auth required' }, { status: 401 })
+
+  const payload = await req.json() // { text?:string, audioUrl?:string, email?:string }
+  // Llama al webhook público de n8n
+  const r = await fetch(process.env.NEXT_PUBLIC_N8N_INGEST_URL!, {
+    method: 'POST',
+    headers: { 'Content-Type':'application/json' },
+    body: JSON.stringify({ ...payload, user_id: user.id, source:'web' })
+  })
+  const result = await r.json()
+  return NextResponse.json(result)
+}
+
