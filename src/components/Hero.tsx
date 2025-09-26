@@ -1,5 +1,6 @@
 "use client";
-import ShinyButton from "@/components/ShinyButton";
+
+import AuthModal from "@/components/AuthModal"; // 👈 importamos el modal
 import { motion } from "framer-motion";
 import { useState } from "react";
 
@@ -30,8 +31,12 @@ export default function Hero() {
         qué hacer.
       </motion.p>
 
+      {/* Botones principales */}
       <div className="mt-8 flex items-center justify-center gap-4">
-        <ShinyButton href="#pricing">Start Free Trial</ShinyButton>
+        {/* Modal de login/register */}
+        <AuthModal triggerText="Start Free Trial" />
+
+        {/* Botón demo */}
         <button
           onClick={() => setShowDemo(true)}
           className="text-zinc-300 hover:text-white flex items-center gap-2"
@@ -40,6 +45,7 @@ export default function Hero() {
         </button>
       </div>
 
+      {/* Modal para demo en YouTube */}
       {showDemo && (
         <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50">
           <div className="relative w-[90%] max-w-2xl bg-zinc-900 rounded-2xl p-4">
