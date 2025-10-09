@@ -1,22 +1,23 @@
+// src/middleware.ts
 import { createServerClient } from "@supabase/ssr";
-import type { NextRequest } from "next/server";
-import { NextResponse } from "next/server";
+import { NextResponse, type NextRequest } from "next/server";
 
-export async function middleware(req: NextRequest) {
-  const res = NextResponse.next();
+export async function middleware(request: NextRequest) {
+  const response = NextResponse.next({ request: { headers: request.headers } });
+
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
         get(name) {
-          return req.cookies.get(name)?.value;
+          return request.cookies.get(name)?.value;
         },
         set(name, value, options) {
-          res.cookies.set(name, value, options);
+          response.cookies.set(name, value, options);
         },
         remove(name, options) {
-          res.cookies.delete(name);
+          response.cookies.delete(name);
         },
       },
     }
@@ -26,10 +27,23 @@ export async function middleware(req: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  // proteger dashboard
-  if (!user && req.nextUrl.pathname.startsWith("/dashboard")) {
-    return NextResponse.redirect(new URL("/", req.url));
+  const pathname = request.nextUrl.pathname;
+
+  const isPublic =
+    pathname.startsWith("/login") ||
+    pathname.startsWith("/auth") ||
+    pathname === "/" ||
+    pathname.startsWith("/_next") ||
+    pathname.startsWith("/api") ||
+    pathname.startsWith("/icons");
+
+  if (isPublic) return response;
+
+  if (!user && pathname.startsWith("/dashboard")) {
+    const redirectUrl = new URL("/login", request.url);
+    redirectUrl.searchParams.set("from", pathname);
+    return NextResponse.redirect(redirectUrl);
   }
 
-  return res;
+  return response;
 }

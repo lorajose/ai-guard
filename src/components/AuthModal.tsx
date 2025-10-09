@@ -58,15 +58,22 @@ export default function AuthModal({ triggerText }: { triggerText: string }) {
     }
   }
 
-  // 🌐 Social Auth
+  // 🌐 Social Auth con redirección segura al dashboard
   async function handleOAuth(
     provider: "google" | "github" | "facebook" | "twitter" | "linkedin"
   ) {
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider,
-      options: { redirectTo: `${window.location.origin}/dashboard` },
-    });
-    if (error) setMessage({ type: "error", text: error.message });
+    try {
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider,
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback`, // 👈 usamos una ruta dedicada
+          queryParams: { next: "/dashboard" }, // se guarda la intención del usuario
+        },
+      });
+      if (error) throw error;
+    } catch (error: any) {
+      setMessage({ type: "error", text: error.message });
+    }
   }
 
   // 📱 Phone OTP (SMS)
@@ -82,13 +89,21 @@ export default function AuthModal({ triggerText }: { triggerText: string }) {
       });
   }
 
-  // Contenido del modal
+  // 💡 Cerrar modal cuando se complete login (opcional)
+  function handleClose() {
+    setOpen(false);
+    setMessage(null);
+    setEmail("");
+    setPassword("");
+  }
+
+  // 🧱 UI del Modal
   const modalContent = (
     <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/80 backdrop-blur-sm overflow-y-auto">
       <div className="relative w-full max-w-md mx-auto my-10 bg-zinc-900 rounded-2xl shadow-xl p-6">
         {/* Cerrar */}
         <button
-          onClick={() => setOpen(false)}
+          onClick={handleClose}
           className="absolute top-3 right-3 text-zinc-400 hover:text-white"
         >
           ✖
@@ -137,7 +152,7 @@ export default function AuthModal({ triggerText }: { triggerText: string }) {
           </div>
         )}
 
-        {/* Formulario */}
+        {/* Formulario Email */}
         <div className="space-y-4">
           <input
             type="email"
@@ -170,53 +185,39 @@ export default function AuthModal({ triggerText }: { triggerText: string }) {
         {/* Divider */}
         <div className="my-6 flex items-center gap-3">
           <hr className="flex-1 border-zinc-700" />
-          <span className="text-xs text-zinc-500">o continua con</span>
+          <span className="text-xs text-zinc-500">o continúa con</span>
           <hr className="flex-1 border-zinc-700" />
         </div>
 
         {/* Social Buttons */}
         <div className="grid gap-3">
-          <button
-            onClick={() => handleOAuth("google")}
-            className="w-full rounded-lg border border-zinc-700 bg-zinc-800 hover:bg-zinc-700 py-2 text-white font-medium flex items-center justify-center gap-2"
-          >
-            <img src="/icons/google.svg" alt="Google" className="w-5 h-5" />
-            Google
-          </button>
-          <button
-            onClick={() => handleOAuth("github")}
-            className="w-full rounded-lg border border-zinc-700 bg-zinc-800 hover:bg-zinc-700 py-2 text-white font-medium flex items-center justify-center gap-2"
-          >
-            <img src="/icons/github.svg" alt="GitHub" className="w-5 h-5" />
-            GitHub
-          </button>
-          <button
-            onClick={() => handleOAuth("facebook")}
-            className="w-full rounded-lg border border-blue-700 bg-blue-600 hover:bg-blue-700 py-2 text-white font-medium flex items-center justify-center gap-2"
-          >
-            <img src="/icons/facebook.svg" alt="Facebook" className="w-5 h-5" />
-            Facebook
-          </button>
-          <button
-            onClick={() => handleOAuth("twitter")}
-            className="w-full rounded-lg border border-sky-700 bg-sky-600 hover:bg-sky-700 py-2 text-white font-medium flex items-center justify-center gap-2"
-          >
-            <img src="/icons/twitter.svg" alt="Twitter" className="w-5 h-5" />
-            Twitter
-          </button>
-          <button
-            onClick={() => handleOAuth("linkedin")}
-            className="w-full rounded-lg border border-blue-800 bg-blue-700 hover:bg-blue-800 py-2 text-white font-medium flex items-center justify-center gap-2"
-          >
-            <img src="/icons/linkedin.svg" alt="LinkedIn" className="w-5 h-5" />
-            LinkedIn
-          </button>
+          {[
+            { name: "Google", icon: "google", provider: "google" },
+            { name: "GitHub", icon: "github", provider: "github" },
+            { name: "Facebook", icon: "facebook", provider: "facebook" },
+            { name: "Twitter", icon: "twitter", provider: "twitter" },
+            { name: "LinkedIn", icon: "linkedin", provider: "linkedin" },
+          ].map((btn) => (
+            <button
+              key={btn.name}
+              onClick={() => handleOAuth(btn.provider as any)}
+              className="w-full rounded-lg border border-zinc-700 bg-zinc-800 hover:bg-zinc-700 py-2 text-white font-medium flex items-center justify-center gap-2"
+            >
+              <img
+                src={`/icons/${btn.icon}.svg`}
+                alt={btn.name}
+                className="w-5 h-5"
+              />
+              {btn.name}
+            </button>
+          ))}
+
           <button
             onClick={handlePhoneLogin}
             className="w-full rounded-lg border border-green-700 bg-green-600 hover:bg-green-700 py-2 text-white font-medium flex items-center justify-center gap-2"
           >
             <img src="/icons/phone.svg" alt="Phone" className="w-5 h-5" />
-            Teléfono (SMS/OTP)
+            Teléfono (SMS / OTP)
           </button>
         </div>
       </div>
