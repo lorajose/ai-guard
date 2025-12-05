@@ -1,3 +1,5 @@
+"use client";
+
 import { motion } from "framer-motion";
 import { Gauge, ShieldAlert, Sparkles } from "lucide-react";
 
