@@ -1,152 +1,220 @@
 "use client";
 
-import { createClient } from "@/lib/supabase/client";
 import { motion } from "framer-motion";
-import { useState } from "react";
+import { useMemo, useState } from "react";
+
+type Mode = "personal" | "business";
+
+const plans: Record<
+  Mode,
+  {
+    title: string;
+    subtitle: string;
+    price: string;
+    features: string[];
+    badge?: string;
+    stripeLink: string | undefined;
+    label: string;
+  }
+> = {
+  personal: {
+    title: "AI Scam Detector Lite",
+    subtitle: "Protección instantánea para tu familia",
+    price: "$10/mes",
+    features: [
+      "AI Scam Detector Lite",
+      "Telegram bot",
+      "Detección básica",
+      "Alertas por email",
+      "7 días de prueba gratis",
+    ],
+    badge: "FOUNDERS - $10/mes de por vida (primeros 100)",
+    stripeLink: process.env.NEXT_PUBLIC_STRIPE_LINK_LITE,
+    label: "Personal",
+  },
+  business: {
+    title: "IA Shield Pro",
+    subtitle: "Visibilidad total para tu equipo",
+    price: "$20/mes",
+    features: [
+      "IA Shield Pro",
+      "Email phishing avanzado",
+      "Panel web completo",
+      "Alertas múltiples (Email, Telegram, Slack)",
+      "Histórico 30 días",
+      "7 días de prueba gratis",
+    ],
+    stripeLink: process.env.NEXT_PUBLIC_STRIPE_LINK_PRO,
+    label: "Business",
+  },
+};
+
+const toggleOptions: Mode[] = ["personal", "business"];
 
 export default function Pricing() {
-  const [mode, setMode] = useState<"lite" | "pro">("lite");
+  const [mode, setMode] = useState<Mode>("personal");
   const [loading, setLoading] = useState(false);
-  const supabase = createClient();
+  const activePlan = plans[mode];
 
-  async function handleCheckout(plan: "LITE" | "PRO") {
-    setLoading(true);
-    try {
-      // 1. Obtener sesión actual
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-      if (!session) {
-        window.location.href = "/login";
-        return;
-      }
+  const otherPlanLabel = useMemo(
+    () => (mode === "personal" ? "Business" : "Personal"),
+    [mode]
+  );
 
-      // 2. Enviar fetch con Authorization Bearer
-      const res = await fetch("/api/checkout/start", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${session.access_token}`,
-        },
-        body: JSON.stringify({ plan }),
-      });
-
-      const { url, error } = await res.json();
-      if (error || !url) throw new Error(error || "Checkout error");
-
-      window.location.href = url; // Redirige a Stripe
-    } catch (err) {
-      console.error("Checkout error:", err);
-      alert("Error iniciando el checkout.");
-    } finally {
-      setLoading(false);
+  function handleCheckout(target: Mode) {
+    const link = plans[target].stripeLink;
+    if (!link) {
+      alert("Stripe link no configurado. Revisa tus variables de entorno.");
+      return;
     }
+    setLoading(true);
+    window.open(link, "_blank", "noopener,noreferrer");
+    setTimeout(() => setLoading(false), 600);
   }
 
   return (
-    <section id="pricing" className="px-6 py-20 text-center">
-      <motion.h2
-        initial={{ opacity: 0, y: 20 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6 }}
-        className="text-4xl font-bold mb-12"
-      >
-        Elige tu plan
-      </motion.h2>
+    <section
+      id="pricing"
+      className="relative overflow-hidden px-6 py-20 text-white"
+    >
+      <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-cyberBlue/20 via-black to-black" />
+      <div className="relative mx-auto max-w-4xl text-center">
+        <motion.h2
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+          className="text-4xl font-bold"
+        >
+          Un plan claro, protección total
+        </motion.h2>
+        <p className="mt-3 text-sm text-zinc-400">
+          Todos los planes incluyen 7 días de prueba gratis.
+        </p>
 
-      {/* Toggle */}
-      <div className="inline-flex rounded-full bg-zinc-800 p-1 mb-8">
-        <button
-          onClick={() => setMode("lite")}
-          className={`px-5 py-2 rounded-full transition ${
-            mode === "lite"
-              ? "bg-black text-white"
-              : "text-zinc-300 hover:text-white"
-          }`}
-        >
-          Personal (Lite)
-        </button>
-        <button
-          onClick={() => setMode("pro")}
-          className={`px-5 py-2 rounded-full transition ${
-            mode === "pro"
-              ? "bg-black text-white"
-              : "text-zinc-300 hover:text-white"
-          }`}
-        >
-          Business (Pro)
-        </button>
+        <div className="mx-auto mt-6 inline-flex items-center gap-3 rounded-full border border-white/10 bg-white/5 px-6 py-2 text-xs uppercase tracking-wide text-neonGreen">
+          🛡️ FOUNDERS - $10/mes de por vida (primeros 100)
+        </div>
+
+        <div className="relative mx-auto mt-10 inline-flex rounded-full border border-white/10 bg-white/5 p-1">
+          {toggleOptions.map((option) => {
+            const isActive = option === mode;
+            return (
+              <button
+                key={option}
+                type="button"
+                onClick={() => setMode(option)}
+                className={`relative z-10 min-w-[140px] rounded-full px-6 py-2 text-sm font-semibold transition ${
+                  isActive ? "text-black" : "text-zinc-300"
+                }`}
+              >
+                {plans[option].label}
+                {isActive && (
+                  <motion.span
+                    layoutId="toggle-pill"
+                    className="absolute inset-0 z-[-1] rounded-full bg-white shadow-lg"
+                    transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                  />
+                )}
+              </button>
+            );
+          })}
+        </div>
+
+        <div className="mt-12">
+          <PlanCard
+            mode={mode}
+            title={activePlan.title}
+            subtitle={activePlan.subtitle}
+            price={activePlan.price}
+            features={activePlan.features}
+            badge={activePlan.badge}
+            loading={loading}
+            onAction={() => handleCheckout(mode)}
+            otherPlanLabel={otherPlanLabel}
+          />
+        </div>
       </div>
-
-      {/* Card */}
-      {mode === "lite" ? (
-        <Card
-          title="AI Scam Detector Lite"
-          price="$10/mes"
-          bullets={[
-            "SMS/WhatsApp/DM scan",
-            "Audio → texto → veredicto",
-            "Consejos claros haz/no hagas",
-            "Alertas Email/Telegram",
-          ]}
-          onClick={() => handleCheckout("LITE")}
-          loading={loading}
-        />
-      ) : (
-        <Card
-          title="IA Shield Pro"
-          price="$20/mes"
-          bullets={[
-            "Detección de phishing en emails",
-            "Panel con histórico y score",
-            "Alertas Slack/Email",
-            "Onboarding 15 min",
-          ]}
-          onClick={() => handleCheckout("PRO")}
-          loading={loading}
-        />
-      )}
     </section>
   );
 }
 
-function Card({
+function PlanCard({
+  mode,
   title,
+  subtitle,
   price,
-  bullets,
-  onClick,
+  features,
+  badge,
   loading,
+  onAction,
+  otherPlanLabel,
 }: {
+  mode: Mode;
   title: string;
+  subtitle: string;
   price: string;
-  bullets: string[];
-  onClick: () => void;
+  features: string[];
+  badge?: string;
   loading: boolean;
+  onAction: () => void;
+  otherPlanLabel: string;
 }) {
   return (
     <motion.div
+      key={mode}
       initial={{ opacity: 0, y: 30 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.6 }}
-      className="rounded-3xl border border-zinc-800 bg-zinc-900/40 p-10 backdrop-blur max-w-md mx-auto"
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5 }}
+      className="group relative mx-auto max-w-xl overflow-hidden rounded-[32px] border border-white/10 bg-white/5 p-10 text-left shadow-2xl backdrop-blur-xl"
     >
-      <h3 className="text-2xl font-semibold">{title}</h3>
-      <p className="mt-3 text-4xl font-bold">{price}</p>
-      <ul className="mt-6 space-y-3 text-left mx-auto max-w-sm">
-        {bullets.map((b) => (
-          <li key={b} className="flex items-start gap-2">
-            <span className="text-green-400">✔</span>
-            <span>{b}</span>
-          </li>
-        ))}
-      </ul>
-      <button
-        onClick={onClick}
-        disabled={loading}
-        className="mt-8 inline-block rounded-xl bg-white text-black px-6 py-3 font-semibold hover:scale-105 transition disabled:opacity-50"
-      >
-        {loading ? "Procesando..." : "Start Free Trial"}
-      </button>
+      <motion.div
+        className="absolute inset-0 z-0 bg-gradient-to-br from-neonGreen/10 via-transparent to-cyan-500/10 opacity-0 transition group-hover:opacity-100"
+        aria-hidden
+      />
+      <div className="relative z-10 space-y-6">
+        {badge && mode === "personal" && (
+          <span className="inline-flex items-center rounded-full border border-neonGreen/40 bg-neonGreen/10 px-4 py-1 text-xs font-semibold text-neonGreen">
+            {badge}
+          </span>
+        )}
+        <div>
+          <p className="text-sm uppercase tracking-wide text-zinc-400">
+            {mode === "personal" ? "Plan Personal · Lite" : "Plan Business · Pro"}
+          </p>
+          <h3 className="mt-2 text-3xl font-semibold">{title}</h3>
+          <p className="mt-2 text-base text-zinc-300">{subtitle}</p>
+        </div>
+
+        <div>
+          <p className="text-5xl font-bold text-white">{price}</p>
+          <p className="text-sm text-zinc-400">7 días de prueba gratis</p>
+        </div>
+
+        <ul className="space-y-3">
+          {features.map((feature) => (
+            <li key={feature} className="flex items-center gap-3 text-sm">
+              <span className="text-neonGreen">✔</span>
+              <span className="text-zinc-100">{feature}</span>
+            </li>
+          ))}
+        </ul>
+
+        <div className="flex flex-col gap-3 sm:flex-row">
+          <motion.button
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            type="button"
+            onClick={onAction}
+            disabled={loading}
+            className="flex-1 rounded-2xl bg-neonGreen px-6 py-3 text-center text-base font-semibold text-black transition disabled:opacity-60"
+          >
+            {loading ? "Abriendo Stripe..." : "Start Free Trial"}
+          </motion.button>
+          <span className="text-center text-xs text-zinc-400 sm:flex-1 sm:text-left">
+            Cambia a {otherPlanLabel} en cualquier momento.
+          </span>
+        </div>
+      </div>
     </motion.div>
   );
 }
