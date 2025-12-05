@@ -1,0 +1,290 @@
+{
+  "name": "IA Shield Pro - Phishing Pipeline",
+  "nodes": [
+    {
+      "parameters": {
+        "triggerOn": "unread",
+        "mailbox": "INBOX",
+        "options": {
+          "downloadAttachments": true
+        }
+      },
+      "id": "IMAP_Email_Trigger",
+      "name": "IMAP Email Trigger",
+      "type": "n8n-nodes-base.emailReadImap",
+      "typeVersion": 2,
+      "position": [
+        250,
+        300
+      ],
+      "notes": "Escucha el buzón phish@domain.com y dispara cuando llega un correo nuevo.",
+      "credentials": {
+        "imap": {
+          "id": "IMAP_CREDENTIAL_ID",
+          "name": "IMAP AI Shield"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "functionCode": "const email = items[0].json;\nconst headers = email.headers || {};\nconst htmlBody = email.html || \"\";\nconst textBody = email.text || \"\";\nconst body = textBody || htmlBody.replace(/<[^>]+>/g, \" \");\n\nconst urlRegex = /(https?:\\/\\/[^\\s)]+)/gi;\nconst urls = Array.from(new Set((body.match(urlRegex) || [])));\n\nconst from = headers[\"from\"] || email.from?.text;\nconst replyTo = headers[\"reply-to\"] || email.replyTo?.text || \"\";\nconst replyMismatch = replyTo && replyTo !== from;\n\nreturn items.map(item => ({\n  json: {\n    ...item.json,\n    parsedBody: body,\n    urls,\n    headers,\n    heuristics: {\n      replyMismatch,\n      spfFail: !(headers[\"received-spf\"] || \"\").includes(\"pass\"),\n      dkimFail: !(headers[\"dkim-signature\"] || \"\").includes(\"pass\"),\n    }\n  }\n}));"
+      },
+      "id": "Function_Extract_Parse",
+      "name": "Extract & Parse",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        540,
+        300
+      ],
+      "notes": "Normaliza el cuerpo del correo, extrae URLs y detecta señales de encabezados."
+    },
+    {
+      "parameters": {
+        "authentication": "headerAuth",
+        "requestMethod": "POST",
+        "url": "https://www.virustotal.com/api/v3/urls",
+        "responseFormat": "json",
+        "sendBody": true,
+        "jsonParameters": false,
+        "options": {},
+        "headerParametersJson": "={\"x-apikey\": \"={{$credentials.apiKey}}\",\"content-type\":\"application/x-www-form-urlencoded\"}",
+        "bodyParametersUi": {
+          "parameter": [
+            {
+              "name": "url",
+              "value": "={{$json[\"urls\"][0] || \"\"}}"
+            }
+          ]
+        }
+      },
+      "id": "HTTP_VirusTotal",
+      "name": "VirusTotal Lookup",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [
+        830,
+        160
+      ],
+      "notes": "Envía la primera URL a VirusTotal para recuperar un análisis.",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "VT_CREDENTIAL_ID",
+          "name": "VirusTotal API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "completion",
+        "operation": "create",
+        "model": "gpt-4o-mini",
+        "prompt": "Tarea: Clasifica el mensaje como [ESTAFA, SOSPECHOSO, SEGURO].\\nDevuelve JSON: { label, score(0-100), razones[], consejo }.\\nSeñales: urgencia, pagos inmediatos, premios, links acortados.\\nMensaje: ```{{$json[\"parsedBody\"]}}```"
+      },
+      "id": "OpenAI_Classification",
+      "name": "OpenAI Classification",
+      "type": "n8n-nodes-base.openAi",
+      "typeVersion": 1,
+      "position": [
+        830,
+        440
+      ],
+      "notes": "Usa GPT para clasificar el contenido del correo.",
+      "credentials": {
+        "openAiApi": {
+          "id": "OPENAI_CREDENTIAL_ID",
+          "name": "OpenAI IA Shield"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "functionCode": "const heuristics = $json.heuristics || {};\nconst vtScore = items[0].json.data?.attributes?.last_analysis_stats?.malicious ? Math.min(100, items[0].json.data.attributes.last_analysis_stats.malicious * 25) : 0;\nconst ai = $items(\"OpenAI Classification\")[0].json?.score || 50;\nconst heuristicsScore = (heuristics.replyMismatch ? 30 : 0) + (heuristics.spfFail ? 20 : 0) + (heuristics.dkfFail ? 20 : 0);\nconst combined = Math.round(ai * 0.5 + vtScore * 0.3 + heuristicsScore * 0.2);\n\nreturn [{\n  json: {\n    ...$json,\n    aiResult: $items(\"OpenAI Classification\")[0].json,\n    vtResult: $items(\"VirusTotal Lookup\")[0].json,\n    scores: {\n      ai,\n      vt: vtScore,\n      heuristics: heuristicsScore,\n      combined,\n    }\n  }\n}];"
+      },
+      "id": "Function_Calc_Score",
+      "name": "Calculate Score",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        1120,
+        300
+      ],
+      "notes": "Combina los diferentes resultados en un score final ponderado."
+    },
+    {
+      "parameters": {
+        "operation": "insert",
+        "table": "checks",
+        "columns": "user_id,label,score,razones,consejo,source,text,metadata",
+        "values": "={{$json.userId}},{{ $json.scores.combined >= 70 ? 'ESTAFA' : $json.scores.combined >= 40 ? 'SOSPECHOSO' : 'SEGURO' }},{{$json.scores.combined}},{{ JSON.stringify($json.aiResult.razones || []) }},{{$json.aiResult.consejo}},email,{{$json.parsedBody}},{{ JSON.stringify({ urls: $json.urls, headers: $json.headers }) }}"
+      },
+      "id": "Supabase_Insert_Check",
+      "name": "Supabase Insert Check",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        1400,
+        300
+      ],
+      "notes": "Guarda el resultado en la tabla checks.",
+      "credentials": {
+        "supabaseApi": {
+          "id": "SUPABASE_CREDENTIAL_ID",
+          "name": "Supabase Admin"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "boolean",
+        "conditions": {
+          "number": [
+            {
+              "value1": "={{$json.scores.combined}}",
+              "operation": "larger",
+              "value2": 70
+            }
+          ]
+        }
+      },
+      "id": "Score_Branch",
+      "name": "Score > 70?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        1680,
+        300
+      ],
+      "notes": "Decide si disparar alertas."
+    },
+    {
+      "parameters": {
+        "functionCode": "const check = $json;\nreturn items.map(item => ({ json: { check } }));"
+      },
+      "id": "Function_Alerts",
+      "name": "Prepare Alert Payload",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        1960,
+        160
+      ],
+      "notes": "Prepara el payload para el sistema multi-canal."
+    },
+    {
+      "parameters": {
+        "functionCode": "return items.map(item => ({ json: { level: \"info\", message: `Check ${item.json.id} registrado con score ${item.json.scores.combined}` } }));"
+      },
+      "id": "Function_Log",
+      "name": "Log Only",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        1960,
+        460
+      ],
+      "notes": "Se ejecuta cuando el score no supera el umbral."
+    }
+  ],
+  "connections": {
+    "Function_Extract_Parse": {
+      "main": [
+        [
+          {
+            "node": "HTTP_VirusTotal",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "OpenAI_Classification",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP_VirusTotal": {
+      "main": [
+        [
+          {
+            "node": "Function_Calc_Score",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI_Classification": {
+      "main": [
+        [
+          {
+            "node": "Function_Calc_Score",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Function_Calc_Score": {
+      "main": [
+        [
+          {
+            "node": "Supabase_Insert_Check",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supabase_Insert_Check": {
+      "main": [
+        [
+          {
+            "node": "Score_Branch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Score_Branch": {
+      "main": [
+        [
+          {
+            "node": "Function_Alerts",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Function_Log",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IMAP_Email_Trigger": {
+      "main": [
+        [
+          {
+            "node": "Function_Extract_Parse",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    
+  },
+  "versionId": "v1",
+  "tags": [
+    {
+      "name": "IA Shield"
+    }
+  ]
+}

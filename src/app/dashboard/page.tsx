@@ -259,8 +259,8 @@ export default function DashboardPage() {
                       <span className="font-medium">
                         {check.source || "Desconocido"}
                       </span>
-                      <LabelBadge label={check.label} />
-                      <ScoreBar score={check.score} label={check.label} />
+                      <DashboardLabelBadge label={check.label} />
+                      <DashboardScoreBar score={check.score} label={check.label} />
                       <button
                         className="rounded-full border border-white/20 px-4 py-1 text-xs text-white transition hover:border-white/40"
                         onClick={(event) => {
@@ -343,7 +343,7 @@ function StatCard({
   );
 }
 
-function LabelBadge({ label }: { label: string }) {
+export function DashboardLabelBadge({ label }: { label: string }) {
   const normalized = label?.toUpperCase();
   const colors: Record<string, string> = {
     ESTAFA: "bg-red-500/20 text-red-300 border-red-500/40",
@@ -362,7 +362,13 @@ function LabelBadge({ label }: { label: string }) {
   );
 }
 
-function ScoreBar({ score, label }: { score: number; label: string }) {
+export function DashboardScoreBar({
+  score,
+  label,
+}: {
+  score: number;
+  label: string;
+}) {
   const normalized = label?.toUpperCase();
   const color =
     normalized === "ESTAFA"
