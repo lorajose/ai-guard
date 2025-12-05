@@ -23,6 +23,11 @@ const filterOptions: { value: FilterOption; label: string }[] = [
   { value: "SEGURO", label: "Seguro" },
 ];
 
+type PlanBadge = {
+  plan: string;
+  status: string;
+};
+
 export default function DashboardPage() {
   const supabase = createClient();
   const [userId, setUserId] = useState<string | null>(null);
@@ -32,6 +37,7 @@ export default function DashboardPage() {
   const [selectedFilter, setSelectedFilter] = useState<FilterOption>("ALL");
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCheck, setSelectedCheck] = useState<CheckRecord | null>(null);
+  const [planBadge, setPlanBadge] = useState<PlanBadge | null>(null);
 
   useEffect(() => {
     async function fetchUser() {
@@ -39,6 +45,14 @@ export default function DashboardPage() {
         data: { user },
       } = await supabase.auth.getUser();
       setUserId(user?.id ?? null);
+      if (user) {
+        setPlanBadge({
+          plan: (user.user_metadata?.plan || "FREE").toUpperCase(),
+          status: (user.user_metadata?.plan_status || "inactive")
+            .toString()
+            .toLowerCase(),
+        });
+      }
       setLoadingUser(false);
     }
     fetchUser();
@@ -164,9 +178,18 @@ export default function DashboardPage() {
       <div className="flex flex-col lg:flex-row">
         <Sidebar />
         <main className="flex-1 px-6 py-10 lg:px-10">
-          <header className="flex flex-col gap-2">
+          <header className="flex flex-col gap-3">
             <p className="text-sm text-zinc-400">Bienvenido de nuevo</p>
             <h1 className="text-3xl font-semibold">Panel de verificaciones</h1>
+            {planBadge && (
+              <span className="inline-flex items-center gap-2 w-fit rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs uppercase tracking-wide text-zinc-200">
+                <span className="h-2 w-2 rounded-full bg-neonGreen" />
+                {planBadge.plan === "PRO" ? "Plan Pro" : `Plan ${planBadge.plan}`}
+                <span className="text-zinc-500 capitalize">
+                  ({planBadge.status})
+                </span>
+              </span>
+            )}
           </header>
 
           <section className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
