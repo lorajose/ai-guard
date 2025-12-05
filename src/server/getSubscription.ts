@@ -1,5 +1,5 @@
 // src/server/getSubscription.ts
-import { supabaseAdmin } from "@/lib/supabase";
+import { supabaseAdmin } from "@/lib/supabaseAdmin";
 
 export async function getUserSubscription(userId: string) {
   const { data } = await supabaseAdmin

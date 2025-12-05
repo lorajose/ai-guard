@@ -1,36 +1,88 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+<div align="center">
+  <img src="./public/og-image.png" alt="IA Shield" width="280" />
+</div>
 
-## Getting Started
+# IA Shield
 
-First, run the development server:
+IA Shield es una plataforma de ciberseguridad asistida por IA que analiza mensajes, correos, audios y llamadas para detectar estafas en segundos. Ofrece protección multi-canal para familias y equipos, con explicaciones claras y alertas inteligentes.
+
+## 🚀 Features principales
+
+- **Detección multi-capa**: Heurísticas + GPT-4o + VirusTotal.
+- **Alertas inteligentes**: Email, Telegram y Slack cuando importa.
+- **Dashboard en tiempo real**: Estadísticas, filtros y modal de detalle.
+- **Bots y workers**: Integraciones con Telegram Lite y watcher IMAP Pro.
+- **Suscripciones Stripe**: Checkout, trial, portal del cliente.
+- **Deploy listo en Vercel**: Configuración completa incluida.
+
+## 🛠 Tech Stack
+
+- **Frontend**: Next.js 15 (App Router), React 19, Tailwind 4, Framer Motion.
+- **Backend**: API Routes, Supabase, OpenAI, Stripe.
+- **Infra**: Vercel, n8n, Telegram Bot, PM2/Docker para workers.
+- **Testing**: Jest, React Testing Library, Playwright.
+
+## ✅ Requisitos previos
+
+- Node.js 18+
+- pnpm 9+
+- Cuenta Supabase, Stripe, OpenAI, Resend, VirusTotal.
+- Vercel CLI (para deploy).
+
+## 🔧 Instalación
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
+pnpm install
 pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 🔐 Variables de entorno
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```env
+NEXT_PUBLIC_APP_URL=http://localhost:3000
+NEXT_PUBLIC_SUPABASE_URL=
+NEXT_PUBLIC_SUPABASE_ANON_KEY=
+NEXT_PUBLIC_STRIPE_LINK_LITE=
+NEXT_PUBLIC_STRIPE_LINK_PRO=
+OPENAI_API_KEY=
+VIRUSTOTAL_API_KEY=
+RESEND_API_KEY=
+SUPABASE_SERVICE_ROLE=
+STRIPE_SECRET_KEY=
+STRIPE_WEBHOOK_SECRET=
+TELEGRAM_BOT_TOKEN=
+IMAP_HOST=
+IMAP_USER=
+IMAP_PASSWORD=
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## 📦 Scripts disponibles
 
-## Learn More
+| comando         | descripción                              |
+| --------------- | ---------------------------------------- |
+| `pnpm dev`      | Dev server                               |
+| `pnpm build`    | Build Next.js                            |
+| `pnpm start`    | Sirve el build                           |
+| `pnpm lint`     | Linter                                    |
+| `pnpm test`     | Jest unit + integration                   |
+| `pnpm test:watch`| Jest watch                              |
+| `pnpm test:e2e` | Playwright E2E                            |
 
-To learn more about Next.js, take a look at the following resources:
+## 🚀 Deployment
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+1. Configura variables en Vercel (preview y prod).
+2. `pnpm install`, `pnpm build`.
+3. `vercel --prod`.
+4. Conecta dominio y habilita analytics (vercel.json ya incluye headers, rewrites, caching).
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Consulta `docs/DEPLOYMENT.md` para detalles de servicios externos (Supabase, Stripe, Telegram, etc.).
 
-## Deploy on Vercel
+## 🧰 Troubleshooting
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- **OPENAI_API_KEY missing**: la API `/api/check` retornará 500. Verifica env vars.
+- **Stripe webhook 400**: revisa `STRIPE_WEBHOOK_SECRET` y endpoint `/api/webhooks/stripe`.
+- **Telegram bot no responde**: asegúrate de iniciar `startTelegramBot()` en tu worker y configurar webhook/polling.
+- **pnpm approve-builds warning**: ejecuta `pnpm approve-builds`.
+- **Test fallan por imports**: `pnpm install` para traer dev deps (Jest/RTL).
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Documentación adicional en `docs/`.
