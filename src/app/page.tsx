@@ -1,8 +1,20 @@
-import FAQ from "@/components/FAQ";
-import Features from "@/components/Features";
-import Footer from "@/components/Footer";
-import Hero from "@/components/Hero";
-import Pricing from "@/components/Pricing";
+import dynamic from "next/dynamic";
+
+const Hero = dynamic(() => import("@/components/Hero"), {
+  loading: () => <div className="h-[500px]" />,
+});
+const Features = dynamic(() => import("@/components/Features"), {
+  ssr: false,
+});
+const Pricing = dynamic(() => import("@/components/Pricing"), {
+  ssr: false,
+});
+const FAQ = dynamic(() => import("@/components/FAQ"), {
+  ssr: false,
+});
+const Footer = dynamic(() => import("@/components/Footer"), {
+  ssr: false,
+});
 
 export default function Page() {
   return (
