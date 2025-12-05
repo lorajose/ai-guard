@@ -15,7 +15,7 @@
     "clsx": "^2.1.1",
     "framer-motion": "^12.23.18",
     "lucide-react": "^0.544.0",
-    "next": "15.6.0",
+    "next": "15.4.8",
     "node-imap": "^0.9.6",
     "node-telegram-bot-api": "^0.66.0",
     "openai": "^4.83.0",
