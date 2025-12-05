@@ -1,0 +1,153 @@
+"use client";
+
+import { createClient } from "@/lib/supabase/client";
+import type { User } from "@supabase/supabase-js";
+import { useRouter } from "next/navigation";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
+
+type AuthActionResult = { success: boolean; error?: string };
+
+type AuthContextValue = {
+  user: User | null;
+  initializing: boolean;
+  signIn: (email: string, password: string) => Promise<AuthActionResult>;
+  signUp: (email: string, password: string) => Promise<AuthActionResult>;
+  signOut: () => Promise<void>;
+  sendMagicLink: (email: string) => Promise<AuthActionResult>;
+  signInWithGoogle: () => Promise<void>;
+};
+
+const AuthContext = createContext<AuthContextValue | undefined>(undefined);
+
+export function AuthProvider({ children }: { children: React.ReactNode }) {
+  const supabase = useMemo(() => createClient(), []);
+  const router = useRouter();
+
+  const [user, setUser] = useState<User | null>(null);
+  const [initializing, setInitializing] = useState(true);
+
+  useEffect(() => {
+    async function hydrateUser() {
+      const {
+        data: { user: currentUser },
+      } = await supabase.auth.getUser();
+      setUser(currentUser);
+      setInitializing(false);
+    }
+
+    hydrateUser();
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [supabase]);
+
+  const signIn = useCallback(
+    async (email: string, password: string) => {
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+      if (error) {
+        return { success: false, error: error.message };
+      }
+      router.push("/dashboard");
+      return { success: true };
+    },
+    [router, supabase]
+  );
+
+  const signUp = useCallback(
+    async (email: string, password: string) => {
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          emailRedirectTo: `${window.location.origin}/dashboard`,
+        },
+      });
+
+      if (error) {
+        return { success: false, error: error.message };
+      }
+
+      try {
+        await fetch("/api/emails", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ type: "welcome", email }),
+        });
+      } catch (err) {
+        console.warn("No se pudo enviar el correo de bienvenida", err);
+      }
+
+      return { success: true };
+    },
+    [supabase]
+  );
+
+  const signOut = useCallback(async () => {
+    await supabase.auth.signOut();
+    router.refresh();
+  }, [router, supabase]);
+
+  const sendMagicLink = useCallback(
+    async (email: string) => {
+      const { error } = await supabase.auth.signInWithOtp({
+        email,
+        options: { emailRedirectTo: `${window.location.origin}/dashboard` },
+      });
+      if (error) {
+        return { success: false, error: error.message };
+      }
+      return {
+        success: true,
+      };
+    },
+    [supabase]
+  );
+
+  const signInWithGoogle = useCallback(async () => {
+    await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: {
+        redirectTo: `${window.location.origin}/dashboard`,
+      },
+    });
+  }, [supabase]);
+
+  const value = useMemo<AuthContextValue>(
+    () => ({
+      user,
+      initializing,
+      signIn,
+      signUp,
+      signOut,
+      sendMagicLink,
+      signInWithGoogle,
+    }),
+    [initializing, signIn, signUp, signOut, sendMagicLink, signInWithGoogle, user]
+  );
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+}
+
+export function useAuth() {
+  const ctx = useContext(AuthContext);
+  if (!ctx) {
+    throw new Error("useAuth debe usarse dentro de AuthProvider");
+  }
+  return ctx;
+}

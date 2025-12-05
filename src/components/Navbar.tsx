@@ -1,42 +1,23 @@
 "use client";
 
 import AuthModal from "@/components/AuthModal";
-import { createClient } from "@/lib/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 import Image from "next/image";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 export default function Navbar() {
-  const supabase = createClient();
-  const [user, setUser] = useState<any>(null);
+  const { user, initializing, signOut } = useAuth();
   const [menuOpen, setMenuOpen] = useState(false);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    async function fetchUser() {
-      const { data } = await supabase.auth.getUser();
-      setUser(data.user);
-      setLoading(false);
-    }
-    fetchUser();
-
-    const { data: listener } = supabase.auth.onAuthStateChange(() => {
-      fetchUser();
-    });
-
-    return () => {
-      listener?.subscription.unsubscribe();
-    };
-  }, []);
 
   async function handleLogout() {
-    await supabase.auth.signOut();
-    window.location.href = "/";
+    await signOut();
   }
 
-  if (loading)
+  if (initializing) {
     return (
       <header className="sticky top-0 z-40 bg-black/30 backdrop-blur border-b border-zinc-800 h-14"></header>
     );
+  }
 
   // 🔹 Navbar público (usuario no logueado)
   if (!user) {
