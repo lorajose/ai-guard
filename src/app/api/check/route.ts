@@ -143,7 +143,7 @@ function isRateLimited(identifier: string) {
   return false;
 }
 
-function runHeuristics(text: string) {
+export function runHeuristics(text: string) {
   const lower = text.toLowerCase();
   const reasons: string[] = [];
   let scoreBump = 0;
@@ -171,7 +171,7 @@ function runHeuristics(text: string) {
   return { reasons, scoreBump };
 }
 
-function buildPrompt(text: string, source?: string) {
+export function buildPrompt(text: string, source?: string) {
   return `Tarea: Clasifica el mensaje como [ESTAFA, SOSPECHOSO, SEGURO].
 Devuelve JSON: { label, score(0-100), razones[], consejo_breve }.
 Señales: urgencia, pagos inmediatos, familiares en peligro, premios, cripto, links acortados.
@@ -179,7 +179,7 @@ Fuente: ${source ?? "desconocida"}
 Mensaje: """${text}"""`;
 }
 
-function parseAIResponse(response: any) {
+export function parseAIResponse(response: any) {
   const text =
     (Array.isArray(response.output_text) && response.output_text[0]) || "";
 
@@ -204,7 +204,7 @@ function parseAIResponse(response: any) {
   }
 }
 
-function normalizeLabel(label: string, heuristicHits: number) {
+export function normalizeLabel(label: string, heuristicHits: number) {
   const upper = label?.toUpperCase();
   const allowed = ["ESTAFA", "SOSPECHOSO", "SEGURO"];
   const normalized = allowed.includes(upper) ? upper : "SOSPECHOSO";
@@ -215,7 +215,7 @@ function normalizeLabel(label: string, heuristicHits: number) {
   return normalized;
 }
 
-function clampScore(score: number, heuristicHits: number) {
+export function clampScore(score: number, heuristicHits: number) {
   const baseline = heuristicHits > 0 ? score + heuristicHits * 2 : score;
   return Math.max(0, Math.min(100, Math.round(baseline)));
 }
