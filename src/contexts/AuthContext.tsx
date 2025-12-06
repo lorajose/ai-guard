@@ -45,8 +45,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     hydrateUser();
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
+    } = supabase.auth.onAuthStateChange((event, session) => {
       setUser(session?.user ?? null);
+      fetch("/auth/callback", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ event, session }),
+      }).catch((error) => console.warn("Failed to sync auth session", error));
     });
 
     return () => {
