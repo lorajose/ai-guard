@@ -35,6 +35,10 @@ export async function middleware(req: NextRequest) {
   } = await supabase.auth.getSession();
 
   const userId = session?.user?.id ?? null;
+  const superAdminEmail = process.env.SUPERADMIN_EMAIL?.toLowerCase();
+  const isSuperAdmin =
+    Boolean(superAdminEmail) &&
+    session?.user?.email?.toLowerCase() === superAdminEmail;
   const isAuthenticated = Boolean(userId);
   const pathname = req.nextUrl.pathname;
   const isProtected = PROTECTED_PREFIXES.some((prefix) =>
@@ -55,7 +59,7 @@ export async function middleware(req: NextRequest) {
     return NextResponse.redirect(new URL("/dashboard", req.url));
   }
 
-  if (isAuthenticated && needsPro && userId) {
+  if (isAuthenticated && needsPro && userId && !isSuperAdmin) {
     const planInfo = await checkUserPlan(userId);
     if (!planInfo.isPro) {
       const upgrade = new URL("/pricing", req.url);
