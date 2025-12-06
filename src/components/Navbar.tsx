@@ -1,9 +1,18 @@
 "use client";
 
-import AuthModal from "@/components/AuthModal";
+import dynamic from "next/dynamic";
 import { useAuth } from "@/contexts/AuthContext";
 import Image from "next/image";
 import { useState } from "react";
+
+const AuthModal = dynamic(() => import("@/components/AuthModal"), {
+  ssr: false,
+  loading: () => (
+    <button className="rounded-lg border border-zinc-700 px-3 py-1.5 opacity-70">
+      ...
+    </button>
+  ),
+});
 
 export default function Navbar() {
   const { user, initializing, signOut } = useAuth();
@@ -90,10 +99,13 @@ export default function Navbar() {
           onClick={() => setMenuOpen(!menuOpen)}
           className="flex items-center gap-2 bg-zinc-800 hover:bg-zinc-700 px-3 py-1.5 rounded-lg transition"
         >
-          <img
+          <Image
             src={user.user_metadata?.avatar_url || "/icons/user.svg"}
             alt="avatar"
-            className="w-6 h-6 rounded-full"
+            width={24}
+            height={24}
+            className="rounded-full"
+            unoptimized
           />
           <span className="text-sm font-medium text-zinc-200">
             {user.user_metadata?.full_name ||
