@@ -163,4 +163,67 @@ export const en = {
       userFallback: "User",
     },
   },
+  howItWorks: {
+    hero: {
+      eyebrow: "How it works",
+      title: "See how IA Shield dissects every message before you tap",
+      subtitle:
+        "From the moment you forward a suspicious email, audio, or DM, our layered defenses go to work. Here’s what happens behind the scenes.",
+      primaryCta: "Start a free check",
+      secondaryCta: "View pricing",
+    },
+    steps: [
+      {
+        title: "1. Submit any suspicious content",
+        description:
+          "Forward the email, upload a screenshot, paste a WhatsApp chat, or send an audio note directly from Telegram or the web dashboard.",
+      },
+      {
+        title: "2. Multi-channel enrichment",
+        description:
+          "We fingerprint links, extract metadata, transcribe audio with Whisper, and compare against thousands of known scam patterns.",
+      },
+      {
+        title: "3. AI verdict + human guidance",
+        description:
+          "Our GPT‑4o classification, heuristics, and VirusTotal checks combine into a clear verdict, score, and next-action advice.",
+      },
+      {
+        title: "4. Instant alerts everywhere",
+        description:
+          "Receive the result in under a minute via email, Telegram, Slack, or inside the dashboard—plus escalation for high-risk cases.",
+      },
+    ],
+    highlights: {
+      title: "Built for every channel your family or team uses",
+      cards: [
+        {
+          title: "Omnichannel intake",
+          description:
+            "Web dashboard, Telegram bot, email forwarding, and IMAP worker for corporate inboxes.",
+        },
+        {
+          title: "Layered analysis",
+          description:
+            "OpenAI GPT-4o-mini, heuristics, VirusTotal, SPF/DKIM parsing, and our proprietary scam graph.",
+        },
+        {
+          title: "Actionable responses",
+          description:
+            "Plain-language explanation, reasons in EN/ES, verification score, and recommended next steps.",
+        },
+      ],
+    },
+    coverage: {
+      title: "Channels we cover today",
+      items: ["Email phishing", "SMS / WhatsApp", "Social DMs", "Audio notes", "Links & attachments"],
+    },
+    cta: {
+      title: "Ready to see IA Shield in action?",
+      description:
+        "Spin up a 7-day free trial, connect your preferred channels, and stop scams before they hit your family or business.",
+      primary: "Launch dashboard",
+      secondary: "Talk to our team",
+    },
+  },
 };

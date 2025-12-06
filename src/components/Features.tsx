@@ -12,7 +12,7 @@ export default function Features() {
   const copy = messages[locale].featuresSection;
 
   return (
-    <section className="relative px-6 py-24">
+    <section id="how" className="relative px-6 py-24">
       <div className="absolute inset-0 pointer-events-none">
         <div className="h-full w-full bg-[radial-gradient(circle_at_top,_rgba(57,255,20,0.12),_transparent_60%),radial-gradient(circle_at_bottom,_rgba(12,108,211,0.15),_transparent_55%)] opacity-70" />
         <div className="absolute inset-0 bg-[linear-gradient(to_right,_rgba(255,255,255,0.05)_1px,_transparent_1px),linear-gradient(to_bottom,_rgba(255,255,255,0.05)_1px,_transparent_1px)] bg-[size:80px_80px]" />
@@ -36,8 +36,8 @@ export default function Features() {
               <motion.div
                 key={feature.title}
                 whileHover={{ y: -8 }}
-              transition={{ duration: 0.3 }}
-              className="rounded-[28px] border border-white/10 bg-white/5 p-6 text-left backdrop-blur"
+                transition={{ duration: 0.3 }}
+                className="rounded-[28px] border border-white/10 bg-white/5 p-6 text-left backdrop-blur"
               >
                 <div className="inline-flex items-center justify-center rounded-2xl bg-black/40 p-3 text-neonGreen">
                   <Icon className="h-5 w-5" />
