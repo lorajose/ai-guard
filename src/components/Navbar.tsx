@@ -5,6 +5,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import Image from "next/image";
 import { useState } from "react";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
+import { useLocale } from "@/contexts/LocaleProvider";
+import { messages } from "@/i18n/messages";
 
 const AuthModal = dynamic(() => import("@/components/AuthModal"), {
   ssr: false,
@@ -17,6 +19,8 @@ const AuthModal = dynamic(() => import("@/components/AuthModal"), {
 
 export default function Navbar() {
   const { user, initializing, signOut } = useAuth();
+  const { locale } = useLocale();
+  const navbarCopy = messages[locale].navbar;
   const [menuOpen, setMenuOpen] = useState(false);
 
   async function handleLogout() {
@@ -45,26 +49,26 @@ export default function Navbar() {
           {/* Menú desktop */}
           <nav className="hidden md:flex items-center gap-6 text-sm text-zinc-300">
             <a href="#how" className="hover:text-white transition">
-              Cómo funciona
+              {navbarCopy.public.how}
             </a>
             <a href="#pricing" className="hover:text-white transition">
-              Precios
+              {navbarCopy.public.pricing}
             </a>
             <a href="#faq" className="hover:text-white transition">
-              FAQ
+              {navbarCopy.public.faq}
             </a>
             <a
               href="#demo"
               className="rounded-lg border border-zinc-700 px-3 py-1.5 hover:text-white hover:border-zinc-500 transition"
             >
-              Ver demo
+              {navbarCopy.public.demo}
             </a>
-            <AuthModal triggerText="Login / Registro" />
+            <AuthModal triggerText={navbarCopy.public.authTrigger} />
           </nav>
 
           {/* Menú móvil */}
           <div className="md:hidden flex items-center gap-3 text-zinc-300">
-            <AuthModal triggerText="Entrar" />
+            <AuthModal triggerText={navbarCopy.public.mobileTrigger} />
             <span className="cursor-pointer">☰</span>
           </div>
         </div>
@@ -84,13 +88,13 @@ export default function Navbar() {
       {/* Links */}
       <div className="hidden md:flex items-center gap-6 text-sm text-zinc-300">
         <a href="/dashboard" className="hover:text-white transition">
-          Dashboard
+          {navbarCopy.private.dashboard}
         </a>
         <a href="/pricing" className="hover:text-white transition">
-          Planes
+          {navbarCopy.private.pricing}
         </a>
         <a href="/support" className="hover:text-white transition">
-          Soporte
+          {navbarCopy.private.support}
         </a>
       </div>
 
@@ -111,7 +115,7 @@ export default function Navbar() {
           <span className="text-sm font-medium text-zinc-200">
             {user.user_metadata?.full_name ||
               user.email?.split("@")[0] ||
-              "Usuario"}
+              navbarCopy.account.userFallback}
           </span>
         </button>
 
@@ -121,19 +125,19 @@ export default function Navbar() {
               href="/account"
               className="block px-4 py-2 text-sm hover:bg-zinc-700"
             >
-              ⚙️ Mi cuenta
+              ⚙️ {navbarCopy.account.account}
             </a>
             <a
               href="/change-password"
               className="block px-4 py-2 text-sm hover:bg-zinc-700"
             >
-              🔑 Cambiar contraseña
+              🔑 {navbarCopy.account.password}
             </a>
             <button
               onClick={handleLogout}
               className="w-full text-left px-4 py-2 text-sm text-red-400 hover:bg-zinc-700"
             >
-              🚪 Cerrar sesión
+              🚪 {navbarCopy.account.logout}
             </button>
           </div>
         )}
