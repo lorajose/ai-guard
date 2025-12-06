@@ -16,6 +16,7 @@ export const es = {
       "Reenvía cualquier mensaje, audio o email sospechoso. Te decimos si es estafa y qué hacer.",
     primaryCta: "Comenzar gratis",
     secondaryCta: "Ver demo de 60s",
+    demoLabel: "Ver demo",
   },
   featuresSection: {
     eyebrow: "Protección total",
