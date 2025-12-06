@@ -1,4 +1,4 @@
-import { createMiddlewareClient } from "@supabase/ssr";
+import { createServerClient } from "@supabase/ssr";
 import { checkUserPlan } from "@/lib/subscription";
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
@@ -9,11 +9,25 @@ const PRO_FEATURE_ROUTES = ["/agentguard", "/shield"];
 
 export async function middleware(req: NextRequest) {
   const res = NextResponse.next();
-  const supabase = createMiddlewareClient(
-    { req, res },
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
-      supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      supabaseKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      cookies: {
+        get(name) {
+          return req.cookies.get(name)?.value;
+        },
+        set(name, value, options) {
+          res.cookies.set({
+            name,
+            value,
+            ...options,
+          });
+        },
+        remove(name, options) {
+          res.cookies.delete({ name, ...options });
+        },
+      },
     }
   );
   const {
