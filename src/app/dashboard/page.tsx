@@ -1,5 +1,7 @@
 "use client";
 
+import { useLocale } from "@/contexts/LocaleProvider";
+import { Locale, messages } from "@/i18n/messages";
 import { createClient } from "@/lib/supabase/client";
 import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useMemo, useState } from "react";
@@ -16,19 +18,22 @@ type CheckRecord = {
 
 type FilterOption = "ALL" | "ESTAFA" | "SOSPECHOSO" | "SEGURO";
 
-const filterOptions: { value: FilterOption; label: string }[] = [
-  { value: "ALL", label: "All" },
-  { value: "ESTAFA", label: "Estafa" },
-  { value: "SOSPECHOSO", label: "Sospechoso" },
-  { value: "SEGURO", label: "Seguro" },
-];
-
 type PlanBadge = {
   plan: string;
   status: string;
 };
 
+type DashboardCopy = (typeof messages)["en"]["dashboard"];
+
 export default function DashboardPage() {
+  const { locale } = useLocale();
+  const dashboardCopy = messages[locale].dashboard;
+  const filterOptions: { value: FilterOption; label: string }[] = [
+    { value: "ALL", label: dashboardCopy.filters.all },
+    { value: "ESTAFA", label: dashboardCopy.filters.estafa },
+    { value: "SOSPECHOSO", label: dashboardCopy.filters.sospechoso },
+    { value: "SEGURO", label: dashboardCopy.filters.seguro },
+  ];
   const supabase = createClient();
   const [userId, setUserId] = useState<string | null>(null);
   const [loadingUser, setLoadingUser] = useState(true);
@@ -141,17 +146,17 @@ export default function DashboardPage() {
         check.status?.toLowerCase() === "pending"
     ).length;
     return [
-      { label: "Total checks", value: total },
-      { label: "Estafas detectadas", value: scams },
-      { label: "Seguras", value: safe },
-      { label: "Pendientes", value: pending },
+      { label: dashboardCopy.stats.total, value: total },
+      { label: dashboardCopy.stats.scams, value: scams },
+      { label: dashboardCopy.stats.safe, value: safe },
+      { label: dashboardCopy.stats.pending, value: pending },
     ];
-  }, [checks]);
+  }, [checks, dashboardCopy]);
 
   if (loadingUser) {
     return (
       <div className="min-h-screen bg-black text-white flex items-center justify-center">
-        <span className="text-sm text-zinc-400">Cargando dashboard...</span>
+        <span className="text-sm text-zinc-400">{dashboardCopy.loading}</span>
       </div>
     );
   }
@@ -159,15 +164,17 @@ export default function DashboardPage() {
   if (!userId) {
     return (
       <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center gap-4">
-        <h1 className="text-3xl font-semibold">Inicia sesión para continuar</h1>
+        <h1 className="text-3xl font-semibold">
+          {dashboardCopy.unauthenticated.title}
+        </h1>
         <p className="text-zinc-400 text-sm">
-          Necesitas una cuenta de IA Shield para ver tus verificaciones.
+          {dashboardCopy.unauthenticated.description}
         </p>
         <a
           href="/login"
           className="rounded-full bg-neonGreen px-6 py-2 text-black font-semibold"
         >
-          Ir a Login
+          {dashboardCopy.unauthenticated.cta}
         </a>
       </div>
     );
@@ -176,17 +183,23 @@ export default function DashboardPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-black via-cyberBlue to-black text-white">
       <div className="flex flex-col lg:flex-row">
-        <Sidebar />
+        <Sidebar copy={dashboardCopy.sidebar} />
         <main className="flex-1 px-6 py-10 lg:px-10">
           <header className="flex flex-col gap-3">
-            <p className="text-sm text-zinc-400">Bienvenido de nuevo</p>
-            <h1 className="text-3xl font-semibold">Panel de verificaciones</h1>
+            <p className="text-sm text-zinc-400">{dashboardCopy.welcome}</p>
+            <h1 className="text-3xl font-semibold">{dashboardCopy.title}</h1>
             {planBadge && (
               <span className="inline-flex items-center gap-2 w-fit rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs uppercase tracking-wide text-zinc-200">
                 <span className="h-2 w-2 rounded-full bg-neonGreen" />
-                {planBadge.plan === "PRO" ? "Plan Pro" : `Plan ${planBadge.plan}`}
+                {formatTemplate(dashboardCopy.planLabel, {
+                  plan: planBadge.plan,
+                })}
                 <span className="text-zinc-500 capitalize">
-                  ({planBadge.status})
+                  (
+                  {formatTemplate(dashboardCopy.statusLabel, {
+                    status: planBadge.status,
+                  })}
+                  )
                 </span>
               </span>
             )}
@@ -224,7 +237,7 @@ export default function DashboardPage() {
                 <input
                   value={searchTerm}
                   onChange={(event) => setSearchTerm(event.target.value)}
-                  placeholder="Buscar por origen o texto"
+                  placeholder={dashboardCopy.searchPlaceholder}
                   className="w-full rounded-2xl border border-white/10 bg-black/40 px-4 py-2 text-sm outline-none placeholder:text-zinc-500"
                 />
                 <span className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-xs text-zinc-500">
@@ -235,16 +248,16 @@ export default function DashboardPage() {
 
             <div className="mt-6 overflow-hidden rounded-2xl border border-white/5">
               <div className="hidden grid-cols-[140px_1fr_150px_200px_120px] bg-white/5 px-6 py-3 text-left text-xs uppercase tracking-wide text-zinc-400 md:grid">
-                <span>Fecha</span>
-                <span>Origen</span>
-                <span>Label</span>
-                <span>Score</span>
-                <span>Acciones</span>
+                <span>{dashboardCopy.table.date}</span>
+                <span>{dashboardCopy.table.source}</span>
+                <span>{dashboardCopy.table.label}</span>
+                <span>{dashboardCopy.table.score}</span>
+                <span>{dashboardCopy.table.actions}</span>
               </div>
               {loadingChecks ? (
                 <SkeletonRows />
               ) : filteredChecks.length === 0 ? (
-                <EmptyState />
+                <EmptyState copy={dashboardCopy.empty} />
               ) : (
                 <ul className="divide-y divide-white/5">
                   {filteredChecks.map((check) => (
@@ -254,10 +267,10 @@ export default function DashboardPage() {
                       onClick={() => setSelectedCheck(check)}
                     >
                       <span className="text-zinc-400">
-                        {formatDate(check.created_at)}
+                        {formatDate(check.created_at, locale)}
                       </span>
                       <span className="font-medium">
-                        {check.source || "Desconocido"}
+                        {check.source || dashboardCopy.table.unknownSource}
                       </span>
                       <DashboardLabelBadge label={check.label} />
                       <DashboardScoreBar score={check.score} label={check.label} />
@@ -268,7 +281,7 @@ export default function DashboardPage() {
                           setSelectedCheck(check);
                         }}
                       >
-                        Ver detalles
+                        {dashboardCopy.table.viewDetails}
                       </button>
                     </li>
                   ))}
@@ -281,12 +294,14 @@ export default function DashboardPage() {
       <DetailsModal
         check={selectedCheck}
         onClose={() => setSelectedCheck(null)}
+        copy={dashboardCopy.table}
+        locale={locale}
       />
     </div>
   );
 }
 
-function Sidebar() {
+function Sidebar({ copy }: { copy: DashboardCopy["sidebar"] }) {
   return (
     <aside className="border-b border-white/10 bg-black/30 px-6 py-6 backdrop-blur md:px-8 lg:min-h-screen lg:w-72 lg:border-r">
       <div className="flex items-center gap-3">
@@ -295,18 +310,18 @@ function Sidebar() {
         </div>
         <div>
           <p className="text-sm uppercase tracking-widest text-zinc-400">
-            IA Shield
+            {copy.brand}
           </p>
-          <p className="text-lg font-semibold">Dashboard</p>
+          <p className="text-lg font-semibold">{copy.title}</p>
         </div>
       </div>
 
       <nav className="mt-10 space-y-2 text-sm font-medium text-zinc-400">
         {[
-          { label: "Dashboard", href: "/dashboard" },
-          { label: "History", href: "/dashboard/history" },
-          { label: "Settings", href: "/dashboard/settings" },
-          { label: "Logout", href: "/logout" },
+          { label: copy.nav.dashboard, href: "/dashboard" },
+          { label: copy.nav.history, href: "/dashboard/history" },
+          { label: copy.nav.settings, href: "/dashboard/settings" },
+          { label: copy.nav.logout, href: "/logout" },
         ].map((item) => (
           <a
             key={item.label}
@@ -403,19 +418,16 @@ function SkeletonRows() {
   );
 }
 
-function EmptyState() {
+function EmptyState({ copy }: { copy: DashboardCopy["empty"] }) {
   return (
     <div className="flex flex-col items-center gap-3 px-6 py-16 text-center">
-      <p className="text-lg font-semibold">Sin verificaciones todavía</p>
-      <p className="text-sm text-zinc-400">
-        Envía tu primer mensaje sospechoso para verlo reflejado aquí en tiempo
-        real.
-      </p>
+      <p className="text-lg font-semibold">{copy.title}</p>
+      <p className="text-sm text-zinc-400">{copy.description}</p>
       <a
         href="/shield"
         className="rounded-full bg-neonGreen px-4 py-2 text-sm font-semibold text-black"
       >
-        Comenzar verificación
+        {copy.cta}
       </a>
     </div>
   );
@@ -424,9 +436,13 @@ function EmptyState() {
 function DetailsModal({
   check,
   onClose,
+  copy,
+  locale,
 }: {
   check: CheckRecord | null;
   onClose: () => void;
+  copy: DashboardCopy["table"];
+  locale: Locale;
 }) {
   return (
     <AnimatePresence>
@@ -450,44 +466,44 @@ function DetailsModal({
               ✕
             </button>
             <div className="flex flex-col gap-4">
-              <h3 className="text-2xl font-semibold">
-                Detalles de verificación
-              </h3>
+              <h3 className="text-2xl font-semibold">{copy.modalTitle}</h3>
               <div className="grid gap-3 text-sm text-zinc-400 sm:grid-cols-2">
                 <p>
-                  <span className="text-zinc-500">Fecha:</span>{" "}
-                  {formatDate(check.created_at, true)}
+                  <span className="text-zinc-500">{copy.date}:</span>{" "}
+                  {formatDate(check.created_at, locale, true)}
                 </p>
                 <p>
-                  <span className="text-zinc-500">Origen:</span>{" "}
-                  {check.source || "Desconocido"}
+                  <span className="text-zinc-500">{copy.source}:</span>{" "}
+                  {check.source || copy.unknownSource}
                 </p>
                 <p>
-                  <span className="text-zinc-500">Label:</span>{" "}
+                  <span className="text-zinc-500">{copy.label}:</span>{" "}
                   <LabelBadge label={check.label} />
                 </p>
                 <p>
-                  <span className="text-zinc-500">Score:</span>{" "}
+                  <span className="text-zinc-500">{copy.score}:</span>{" "}
                   {Math.round(check.score)}%
                 </p>
               </div>
               <div>
                 <p className="text-xs uppercase tracking-wide text-zinc-500">
-                  Mensaje analizado
+                  {copy.messageAnalyzed}
                 </p>
                 <div className="mt-2 max-h-60 overflow-y-auto rounded-2xl border border-white/10 bg-black/40 p-4 text-sm text-zinc-100">
-                  {check.text || "Sin contenido"}
+                  {check.text || copy.noContent}
                 </div>
               </div>
             </div>
             <div className="mt-6 flex flex-col gap-2 rounded-2xl border border-white/5 bg-black/40 p-4 text-sm text-zinc-400">
               <p>
-                Estado:{" "}
+                {copy.status}:{" "}
                 <span className="font-semibold text-white">
-                  {check.status || "Completado"}
+                  {check.status || copy.completed}
                 </span>
               </p>
-              <p>Actualizado: {formatDate(check.created_at, true)}</p>
+              <p>
+                {copy.updated}: {formatDate(check.created_at, locale, true)}
+              </p>
             </div>
           </motion.div>
         </motion.div>
@@ -496,10 +512,18 @@ function DetailsModal({
   );
 }
 
-function formatDate(dateValue: string, includeTime = false) {
+function formatDate(dateValue: string, locale: Locale, includeTime = false) {
   const date = new Date(dateValue);
-  return date.toLocaleString("es-ES", {
+  const localeCode = locale === "es" ? "es-ES" : "en-US";
+  return date.toLocaleString(localeCode, {
     dateStyle: "medium",
     timeStyle: includeTime ? "short" : undefined,
   });
+}
+
+function formatTemplate(template: string, replacements: Record<string, string>) {
+  return Object.entries(replacements).reduce(
+    (acc, [key, value]) => acc.replace(`{${key}}`, value),
+    template
+  );
 }
