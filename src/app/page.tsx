@@ -3,18 +3,10 @@ import dynamic from "next/dynamic";
 const Hero = dynamic(() => import("@/components/Hero"), {
   loading: () => <div className="h-[500px]" />,
 });
-const Features = dynamic(() => import("@/components/Features"), {
-  ssr: false,
-});
-const Pricing = dynamic(() => import("@/components/Pricing"), {
-  ssr: false,
-});
-const FAQ = dynamic(() => import("@/components/FAQ"), {
-  ssr: false,
-});
-const Footer = dynamic(() => import("@/components/Footer"), {
-  ssr: false,
-});
+const Features = dynamic(() => import("@/components/Features"));
+const Pricing = dynamic(() => import("@/components/Pricing"));
+const FAQ = dynamic(() => import("@/components/FAQ"));
+const Footer = dynamic(() => import("@/components/Footer"));
 
 export default function Page() {
   return (
