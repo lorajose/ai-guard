@@ -163,4 +163,73 @@ export const es = {
       userFallback: "Usuario",
     },
   },
+  howItWorks: {
+    hero: {
+      eyebrow: "Cómo funciona",
+      title: "Así analiza IA Shield cada mensaje antes de que respondas",
+      subtitle:
+        "En cuanto reenvías un email, audio o chat sospechoso, nuestras defensas multinivel se activan. Este es el proceso paso a paso.",
+      primaryCta: "Enviar primer check",
+      secondaryCta: "Ver planes",
+    },
+    steps: [
+      {
+        title: "1. Envía el contenido sospechoso",
+        description:
+          "Reenvía el email, sube un screenshot, pega un chat de WhatsApp o comparte un audio desde Telegram o el panel web.",
+      },
+      {
+        title: "2. Enriquecimiento multicanal",
+        description:
+          "Extraemos metadatos, analizamos links, transcribimos audio con Whisper y comparamos con miles de estafas conocidas.",
+      },
+      {
+        title: "3. Veredicto IA + guía humana",
+        description:
+          "La clasificación GPT‑4o, heurísticas y VirusTotal se combinan en un veredicto claro, score y consejo accionable.",
+      },
+      {
+        title: "4. Alertas en segundos",
+        description:
+          "Recibes la respuesta en menos de un minuto por email, Telegram, Slack o directamente en el dashboard.",
+      },
+    ],
+    highlights: {
+      title: "Diseñado para cada canal que usa tu familia o equipo",
+      cards: [
+        {
+          title: "Ingreso omnicanal",
+          description:
+            "Dashboard web, bot de Telegram, reenvío de emails y worker IMAP para cuentas corporativas.",
+        },
+        {
+          title: "Análisis en capas",
+          description:
+            "OpenAI GPT-4o-mini, heurísticas, VirusTotal, análisis SPF/DKIM y nuestro grafo propietario de estafas.",
+        },
+        {
+          title: "Respuestas accionables",
+          description:
+            "Explicación sin jerga, razones en EN/ES, puntaje de riesgo y siguientes pasos recomendados.",
+        },
+      ],
+    },
+    coverage: {
+      title: "Cobertura actual de canales",
+      items: [
+        "Phishing por email",
+        "SMS / WhatsApp",
+        "DMs sociales",
+        "Notas de voz",
+        "Links y adjuntos",
+      ],
+    },
+    cta: {
+      title: "¿Listo para ver IA Shield en vivo?",
+      description:
+        "Activa la prueba gratis de 7 días, conecta tus canales y detén las estafas antes de que afecten a tu familia o negocio.",
+      primary: "Abrir dashboard",
+      secondary: "Hablar con el equipo",
+    },
+  },
 };
