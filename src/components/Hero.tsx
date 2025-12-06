@@ -104,13 +104,17 @@ function DemoModal({
           ✕
         </button>
         <div className="aspect-video w-full bg-black/60">
-          <iframe
-            className="h-full w-full"
-            src="https://www.youtube.com/embed/dQw4w9WgXcQ"
-            title={label}
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-            allowFullScreen
-          />
+          <video
+            className="h-full w-full object-cover"
+            src="/videos/A_cinematic_AI_Guard.mp4"
+            controls
+            autoPlay
+            muted
+            loop
+            playsInline
+          >
+            {label}
+          </video>
         </div>
         <div className="p-4 text-center text-sm text-zinc-400">{label}</div>
       </div>
