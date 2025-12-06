@@ -142,4 +142,25 @@ export const es = {
       cta: "Comenzar verificación",
     },
   },
+  navbar: {
+    public: {
+      how: "Cómo funciona",
+      pricing: "Precios",
+      faq: "FAQ",
+      demo: "Ver demo",
+      authTrigger: "Login / Registro",
+      mobileTrigger: "Entrar",
+    },
+    private: {
+      dashboard: "Dashboard",
+      pricing: "Planes",
+      support: "Soporte",
+    },
+    account: {
+      account: "Mi cuenta",
+      password: "Cambiar contraseña",
+      logout: "Cerrar sesión",
+      userFallback: "Usuario",
+    },
+  },
 };
