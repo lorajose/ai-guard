@@ -16,6 +16,7 @@ export const en = {
       "Forward any suspicious message, audio, or email. We tell you if it's a scam and what to do next.",
     primaryCta: "Start Free Trial",
     secondaryCta: "Watch 60s Demo",
+    demoLabel: "Watch demo",
   },
   featuresSection: {
     eyebrow: "Total protection",
