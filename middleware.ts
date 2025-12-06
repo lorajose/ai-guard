@@ -1,3 +1,4 @@
+import { createMiddlewareClient } from "@supabase/ssr";
 import { checkUserPlan } from "@/lib/subscription";
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
@@ -5,13 +6,22 @@ import { NextResponse } from "next/server";
 const PROTECTED_PREFIXES = ["/dashboard"];
 const AUTH_ROUTES = ["/login", "/signup"];
 const PRO_FEATURE_ROUTES = ["/agentguard", "/shield"];
-const SUPABASE_COOKIE_NAME = getSupabaseCookieName();
 
 export async function middleware(req: NextRequest) {
   const res = NextResponse.next();
-  const session = getSessionFromCookie(req);
+  const supabase = createMiddlewareClient(
+    { req, res },
+    {
+      supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      supabaseKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    }
+  );
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
 
-  const isAuthenticated = Boolean(session?.userId);
+  const userId = session?.user?.id ?? null;
+  const isAuthenticated = Boolean(userId);
   const pathname = req.nextUrl.pathname;
   const isProtected = PROTECTED_PREFIXES.some((prefix) =>
     pathname.startsWith(prefix)
@@ -31,8 +41,8 @@ export async function middleware(req: NextRequest) {
     return NextResponse.redirect(new URL("/dashboard", req.url));
   }
 
-  if (isAuthenticated && needsPro && session?.userId) {
-    const planInfo = await checkUserPlan(session.userId);
+  if (isAuthenticated && needsPro && userId) {
+    const planInfo = await checkUserPlan(userId);
     if (!planInfo.isPro) {
       const upgrade = new URL("/pricing", req.url);
       upgrade.searchParams.set("upgrade", "pro");
@@ -46,46 +56,3 @@ export async function middleware(req: NextRequest) {
 export const config = {
   matcher: ["/dashboard/:path*", "/login", "/signup", "/agentguard/:path*", "/shield/:path*"],
 };
-
-function getSupabaseCookieName() {
-  try {
-    const projectRef = new URL(
-      process.env.NEXT_PUBLIC_SUPABASE_URL || ""
-    ).hostname.split(".")[0];
-    return `sb-${projectRef}-auth-token`;
-  } catch {
-    return null;
-  }
-}
-
-function getSessionFromCookie(req: NextRequest) {
-  if (!SUPABASE_COOKIE_NAME) return null;
-  const rawValue = req.cookies.get(SUPABASE_COOKIE_NAME)?.value;
-  if (!rawValue) return null;
-  try {
-    const parsed = tryParseJson(rawValue);
-    const session =
-      parsed?.currentSession ||
-      parsed?.session ||
-      parsed?.data?.session;
-    const user =
-      session?.user ||
-      parsed?.currentUser ||
-      parsed?.user ||
-      parsed?.data?.user;
-    if (user?.id) {
-      return { userId: user.id, session };
-    }
-  } catch (error) {
-    console.warn("Unable to parse Supabase auth cookie", error);
-  }
-  return null;
-}
-
-function tryParseJson(value: string) {
-  try {
-    return JSON.parse(value);
-  } catch {
-    return JSON.parse(decodeURIComponent(value));
-  }
-}
