@@ -1,4 +1,4 @@
-import { createSupabaseMiddlewareClient } from "@/lib/supabase";
+import { createServerClient } from "@supabase/ssr";
 import { checkUserPlan } from "@/lib/subscription";
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
@@ -9,12 +9,37 @@ const PRO_FEATURE_ROUTES = ["/agentguard", "/shield"];
 
 export async function middleware(req: NextRequest) {
   const res = NextResponse.next();
-  const supabase = createSupabaseMiddlewareClient(req, res);
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        get(name) {
+          return req.cookies.get(name)?.value;
+        },
+        set(name, value, options) {
+          res.cookies.set({
+            name,
+            value,
+            ...options,
+          });
+        },
+        remove(name, options) {
+          res.cookies.delete({ name, ...options });
+        },
+      },
+    }
+  );
   const {
     data: { session },
   } = await supabase.auth.getSession();
 
-  const isAuthenticated = Boolean(session?.user);
+  const userId = session?.user?.id ?? null;
+  const superAdminEmail = process.env.SUPERADMIN_EMAIL?.toLowerCase();
+  const isSuperAdmin =
+    Boolean(superAdminEmail) &&
+    session?.user?.email?.toLowerCase() === superAdminEmail;
+  const isAuthenticated = Boolean(userId);
   const pathname = req.nextUrl.pathname;
   const isProtected = PROTECTED_PREFIXES.some((prefix) =>
     pathname.startsWith(prefix)
@@ -34,8 +59,8 @@ export async function middleware(req: NextRequest) {
     return NextResponse.redirect(new URL("/dashboard", req.url));
   }
 
-  if (isAuthenticated && needsPro) {
-    const planInfo = await checkUserPlan(session.user.id);
+  if (isAuthenticated && needsPro && userId && !isSuperAdmin) {
+    const planInfo = await checkUserPlan(userId);
     if (!planInfo.isPro) {
       const upgrade = new URL("/pricing", req.url);
       upgrade.searchParams.set("upgrade", "pro");
