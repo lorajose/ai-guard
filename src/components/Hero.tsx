@@ -17,7 +17,10 @@ export default function Hero() {
   const [videoOpen, setVideoOpen] = useState(false);
 
   return (
-    <section className="relative overflow-hidden bg-gradient-to-b from-cyberBlue via-black to-black py-24 text-white">
+    <section
+      id="demo"
+      className="relative overflow-hidden bg-gradient-to-b from-cyberBlue via-black to-black py-24 text-white"
+    >
       <div className="absolute inset-0">
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(57,255,20,0.25),_transparent_55%),radial-gradient(circle_at_bottom,_rgba(12,108,211,0.35),_transparent_50%)]" />
         <div className="pointer-events-none absolute inset-0 backdrop-blur-[120px]" />
