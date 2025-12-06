@@ -1,5 +1,7 @@
 "use client";
 
+import { useLocale } from "@/contexts/LocaleProvider";
+import { messages } from "@/i18n/messages";
 import { motion } from "framer-motion";
 import { useMemo, useState } from "react";
 
@@ -18,48 +20,27 @@ const plans: Record<
   }
 > = {
   personal: {
-    title: "AI Scam Detector Lite",
-    subtitle: "Protección instantánea para tu familia",
-    price: "$10/mes",
-    features: [
-      "AI Scam Detector Lite",
-      "Telegram bot",
-      "Detección básica",
-      "Alertas por email",
-      "7 días de prueba gratis",
-    ],
-    badge: "FOUNDERS - $10/mes de por vida (primeros 100)",
     stripeLink: process.env.NEXT_PUBLIC_STRIPE_LINK_LITE,
-    label: "Personal",
   },
   business: {
-    title: "IA Shield Pro",
-    subtitle: "Visibilidad total para tu equipo",
-    price: "$20/mes",
-    features: [
-      "IA Shield Pro",
-      "Email phishing avanzado",
-      "Panel web completo",
-      "Alertas múltiples (Email, Telegram, Slack)",
-      "Histórico 30 días",
-      "7 días de prueba gratis",
-    ],
     stripeLink: process.env.NEXT_PUBLIC_STRIPE_LINK_PRO,
-    label: "Business",
   },
 };
 
 const toggleOptions: Mode[] = ["personal", "business"];
 
 export default function Pricing() {
+  const { locale } = useLocale();
+  const pricingCopy = messages[locale].pricing;
   const [mode, setMode] = useState<Mode>("personal");
   const [loading, setLoading] = useState(false);
-  const activePlan = plans[mode];
+  const activePlan = pricingCopy.plans[mode];
 
-  const otherPlanLabel = useMemo(
-    () => (mode === "personal" ? "Business" : "Personal"),
-    [mode]
-  );
+  const otherPlanLabel = useMemo(() => {
+    return mode === "personal"
+      ? pricingCopy.toggle.business
+      : pricingCopy.toggle.personal;
+  }, [mode, pricingCopy.toggle.business, pricingCopy.toggle.personal]);
 
   function handleCheckout(target: Mode) {
     const link = plans[target].stripeLink;
@@ -85,14 +66,14 @@ export default function Pricing() {
           transition={{ duration: 0.6 }}
           className="text-4xl font-bold"
         >
-          Un plan claro, protección total
+          {pricingCopy.title}
         </motion.h2>
         <p className="mt-3 text-sm text-zinc-400">
-          Todos los planes incluyen 7 días de prueba gratis.
+          {pricingCopy.subtitle}
         </p>
 
         <div className="mx-auto mt-6 inline-flex items-center gap-3 rounded-full border border-white/10 bg-white/5 px-6 py-2 text-xs uppercase tracking-wide text-neonGreen">
-          🛡️ FOUNDERS - $10/mes de por vida (primeros 100)
+          🛡️ {pricingCopy.foundersBadge}
         </div>
 
         <div className="relative mx-auto mt-10 inline-flex rounded-full border border-white/10 bg-white/5 p-1">
@@ -107,7 +88,7 @@ export default function Pricing() {
                   isActive ? "text-black" : "text-zinc-300"
                 }`}
               >
-                {plans[option].label}
+                {pricingCopy.toggle[option]}
                 {isActive && (
                   <motion.span
                     layoutId="toggle-pill"
@@ -131,6 +112,8 @@ export default function Pricing() {
             loading={loading}
             onAction={() => handleCheckout(mode)}
             otherPlanLabel={otherPlanLabel}
+            label={activePlan.label}
+            noteTemplate={pricingCopy.note}
           />
         </div>
       </div>
@@ -140,6 +123,7 @@ export default function Pricing() {
 
 function PlanCard({
   mode,
+  label,
   title,
   subtitle,
   price,
@@ -148,8 +132,10 @@ function PlanCard({
   loading,
   onAction,
   otherPlanLabel,
+  noteTemplate,
 }: {
   mode: Mode;
+  label: string;
   title: string;
   subtitle: string;
   price: string;
@@ -158,6 +144,7 @@ function PlanCard({
   loading: boolean;
   onAction: () => void;
   otherPlanLabel: string;
+  noteTemplate: string;
 }) {
   return (
     <motion.div
@@ -179,7 +166,7 @@ function PlanCard({
         )}
         <div>
           <p className="text-sm uppercase tracking-wide text-zinc-400">
-            {mode === "personal" ? "Plan Personal · Lite" : "Plan Business · Pro"}
+            {label}
           </p>
           <h3 className="mt-2 text-3xl font-semibold">{title}</h3>
           <p className="mt-2 text-base text-zinc-300">{subtitle}</p>
@@ -211,7 +198,7 @@ function PlanCard({
             {loading ? "Abriendo Stripe..." : "Start Free Trial"}
           </motion.button>
           <span className="text-center text-xs text-zinc-400 sm:flex-1 sm:text-left">
-            Cambia a {otherPlanLabel} en cualquier momento.
+            {noteTemplate.replace("{plan}", otherPlanLabel)}
           </span>
         </div>
       </div>
