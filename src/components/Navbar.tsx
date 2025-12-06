@@ -4,6 +4,7 @@ import dynamic from "next/dynamic";
 import { useAuth } from "@/contexts/AuthContext";
 import Image from "next/image";
 import { useState } from "react";
+import LanguageSwitcher from "@/components/LanguageSwitcher";
 
 const AuthModal = dynamic(() => import("@/components/AuthModal"), {
   ssr: false,
@@ -137,6 +138,8 @@ export default function Navbar() {
           </div>
         )}
       </div>
+
+      <LanguageSwitcher />
     </nav>
   );
 }

@@ -1,6 +1,8 @@
 "use client";
 
 import ShinyButton from "@/components/ShinyButton";
+import { useLocale } from "@/contexts/LocaleProvider";
+import { messages } from "@/i18n/messages";
 import { motion } from "framer-motion";
 
 const heroVariants = {
@@ -8,14 +10,10 @@ const heroVariants = {
   visible: { opacity: 1, y: 0 },
 };
 
-const badges = [
-  "🛡️ Hecho para EE.UU.",
-  "⚡ Rápido",
-  "🔒 Privado",
-  "✅ Sin PHI",
-];
-
 export default function Hero() {
+  const { locale } = useLocale();
+  const heroCopy = messages[locale].hero;
+
   return (
     <section className="relative overflow-hidden bg-gradient-to-b from-cyberBlue via-black to-black py-24 text-white">
       <div className="absolute inset-0">
@@ -37,7 +35,7 @@ export default function Hero() {
             transition={{ delay: 0.1, duration: 0.6 }}
             className="inline-flex flex-wrap items-center justify-center gap-3 text-sm text-zinc-200"
           >
-            {badges.map((badge) => (
+            {heroCopy.badges.map((badge) => (
               <span
                 key={badge}
                 className="rounded-full border border-white/10 bg-black/30 px-4 py-1"
@@ -52,7 +50,7 @@ export default function Hero() {
             variants={heroVariants}
             transition={{ delay: 0.2, duration: 0.7 }}
           >
-            Protege a tu familia y tu negocio de estafas con IA — en segundos
+            {heroCopy.title}
           </motion.h1>
 
           <motion.p
@@ -60,8 +58,7 @@ export default function Hero() {
             variants={heroVariants}
             transition={{ delay: 0.3, duration: 0.7 }}
           >
-            Reenvía un mensaje, audio o email sospechoso. Te decimos si es
-            estafa y qué hacer
+            {heroCopy.subtitle}
           </motion.p>
 
           <motion.div
@@ -69,9 +66,9 @@ export default function Hero() {
             variants={heroVariants}
             transition={{ delay: 0.4, duration: 0.7 }}
           >
-            <ShinyButton href="/register">Start Free Trial</ShinyButton>
+            <ShinyButton href="/register">{heroCopy.primaryCta}</ShinyButton>
             <button className="w-full rounded-xl border border-white/30 bg-white/10 px-6 py-3 text-sm font-semibold text-white backdrop-blur-md transition hover:border-white/60 hover:bg-white/20 sm:w-auto">
-              Watch 60s Demo
+              {heroCopy.secondaryCta}
             </button>
           </motion.div>
         </motion.div>
