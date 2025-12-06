@@ -187,7 +187,7 @@ export default function DashboardPage() {
             </a>
             <a
               href="/login"
-              className="inline-flex items-center justify-center rounded-2xl bg-neonGreen px-6 py-3 text-sm font-semibold text-black"
+              className="inline-flex items-center justify-center rounded-2xl bg-neonGreen px-6 py-3 text-sm font-semibold text-black shadow-[0_10px_30px_rgba(57,255,20,0.3)] transition hover:bg-lime-300"
             >
               {dashboardCopy.unauthenticated.cta}
             </a>

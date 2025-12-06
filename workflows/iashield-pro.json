@@ -100,6 +100,7 @@
     {
       "parameters": {
         "functionCode": "const heuristics = $json.heuristics || {};\nconst vtScore = items[0].json.data?.attributes?.last_analysis_stats?.malicious ? Math.min(100, items[0].json.data.attributes.last_analysis_stats.malicious * 25) : 0;\nconst ai = $items(\"OpenAI Classification\")[0].json?.score || 50;\nconst heuristicsScore = (heuristics.replyMismatch ? 30 : 0) + (heuristics.spfFail ? 20 : 0) + (heuristics.dkfFail ? 20 : 0);\nconst combined = Math.round(ai * 0.5 + vtScore * 0.3 + heuristicsScore * 0.2);\n\nreturn [{\n  json: {\n    ...$json,\n    aiResult: $items(\"OpenAI Classification\")[0].json,\n    vtResult: $items(\"VirusTotal Lookup\")[0].json,\n    scores: {\n      ai,\n      vt: vtScore,\n      heuristics: heuristicsScore,\n      combined,\n    }\n  }\n}];"
+        "functionCode": "const crypto = require(\"crypto\");\nconst heuristics = $json.heuristics || {};\nconst vtStats = $items(\"VirusTotal Lookup\")[0].json?.data?.attributes?.last_analysis_stats || {};\nconst vtScore = vtStats.malicious ? Math.min(100, vtStats.malicious * 25) : 0;\nconst aiResult = $items(\"OpenAI Classification\")[0].json || {};\nconst ai = aiResult.score || 50;\nconst heuristicsScore = (heuristics.replyMismatch ? 30 : 0) + (heuristics.spfFail ? 20 : 0) + (heuristics.dkimFail ? 20 : 0);\nconst combined = Math.round(ai * 0.5 + vtScore * 0.3 + heuristicsScore * 0.2);\nconst parsedBody = $json.parsedBody || \"\";\nconst contentHash = crypto.createHash(\"sha256\").update(parsedBody).digest(\"hex\");\n\nreturn [{\n  json: {\n    ...$json,\n    parsedBody,\n    contentHash,\n    aiResult,\n    vtResult: $items(\"VirusTotal Lookup\")[0].json,\n    scores: {\n      ai,\n      vt: vtScore,\n      heuristics: heuristicsScore,\n      combined,\n    }\n  }\n}];"
       },
       "id": "Function_Calc_Score",
       "name": "Calculate Score",
@@ -115,8 +116,8 @@
       "parameters": {
         "operation": "insert",
         "table": "checks",
-        "columns": "user_id,label,score,razones,consejo,source,text,metadata",
-        "values": "={{$json.userId}},{{ $json.scores.combined >= 70 ? 'ESTAFA' : $json.scores.combined >= 40 ? 'SOSPECHOSO' : 'SEGURO' }},{{$json.scores.combined}},{{ JSON.stringify($json.aiResult.razones || []) }},{{$json.aiResult.consejo}},email,{{$json.parsedBody}},{{ JSON.stringify({ urls: $json.urls, headers: $json.headers }) }}"
+        "columns": "user_id,source,content_hash,label,score,reasons,advice,text,metadata",
+        "values": "={{$json.userId || $json.ownerId}},email,{{$json.contentHash}},{{ $json.scores.combined >= 70 ? 'ESTAFA' : $json.scores.combined >= 40 ? 'SOSPECHOSO' : 'SEGURO' }},{{$json.scores.combined}},{{ JSON.stringify($json.aiResult.razones || []) }},{{$json.aiResult.consejo}},{{$json.parsedBody}},{{ JSON.stringify({ urls: $json.urls || [], headers: $json.headers, heuristics: $json.heuristics }) }}"
       },
       "id": "Supabase_Insert_Check",
       "name": "Supabase Insert Check",

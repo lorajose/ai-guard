@@ -95,8 +95,14 @@ function DemoModal({
   onClose: () => void;
 }) {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 px-4">
-      <div className="relative w-full max-w-3xl overflow-hidden rounded-3xl border border-white/10 bg-black/90">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 px-4"
+      onClick={onClose}
+    >
+      <div
+        className="relative w-full max-w-3xl overflow-hidden rounded-3xl border border-white/10 bg-black/90"
+        onClick={(event) => event.stopPropagation()}
+      >
         <button
           onClick={onClose}
           className="absolute right-3 top-3 text-sm text-zinc-400 transition hover:text-white"
