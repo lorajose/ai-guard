@@ -2,6 +2,7 @@
 "use client";
 
 import { createClient } from "@/lib/supabase/client";
+import Image from "next/image";
 import { useState } from "react";
 import { createPortal } from "react-dom";
 
@@ -203,10 +204,11 @@ export default function AuthModal({ triggerText }: { triggerText: string }) {
               onClick={() => handleOAuth(btn.provider as any)}
               className="w-full rounded-lg border border-zinc-700 bg-zinc-800 hover:bg-zinc-700 py-2 text-white font-medium flex items-center justify-center gap-2"
             >
-              <img
+              <Image
                 src={`/icons/${btn.icon}.svg`}
                 alt={btn.name}
-                className="w-5 h-5"
+                width={20}
+                height={20}
               />
               {btn.name}
             </button>
@@ -216,7 +218,7 @@ export default function AuthModal({ triggerText }: { triggerText: string }) {
             onClick={handlePhoneLogin}
             className="w-full rounded-lg border border-green-700 bg-green-600 hover:bg-green-700 py-2 text-white font-medium flex items-center justify-center gap-2"
           >
-            <img src="/icons/phone.svg" alt="Phone" className="w-5 h-5" />
+            <Image src="/icons/phone.svg" alt="Phone" width={20} height={20} />
             Teléfono (SMS / OTP)
           </button>
         </div>
