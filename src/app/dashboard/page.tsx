@@ -163,19 +163,36 @@ export default function DashboardPage() {
 
   if (!userId) {
     return (
-      <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center gap-4">
-        <h1 className="text-3xl font-semibold">
-          {dashboardCopy.unauthenticated.title}
-        </h1>
-        <p className="text-zinc-400 text-sm">
-          {dashboardCopy.unauthenticated.description}
-        </p>
-        <a
-          href="/login"
-          className="rounded-full bg-neonGreen px-6 py-2 text-black font-semibold"
-        >
-          {dashboardCopy.unauthenticated.cta}
-        </a>
+      <div className="min-h-screen bg-gradient-to-b from-black via-cyberBlue/20 to-black flex items-center justify-center px-6 text-white relative overflow-hidden">
+        <div className="absolute inset-0">
+          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(57,255,20,0.15),_transparent_55%),radial-gradient(circle_at_bottom,_rgba(12,108,211,0.2),_transparent_55%)]" />
+          <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(to_right,_rgba(255,255,255,0.04)_1px,_transparent_1px),linear-gradient(to_bottom,_rgba(255,255,255,0.04)_1px,_transparent_1px)] bg-[size:120px_120px]" />
+        </div>
+        <div className="relative w-full max-w-lg rounded-[32px] border border-white/10 bg-black/70 p-8 text-center backdrop-blur">
+          <p className="text-xs uppercase tracking-[0.4em] text-zinc-400">
+            IA Shield
+          </p>
+          <h1 className="mt-4 text-3xl font-semibold">
+            {dashboardCopy.unauthenticated.title}
+          </h1>
+          <p className="mt-3 text-sm text-zinc-400">
+            {dashboardCopy.unauthenticated.description}
+          </p>
+          <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-center">
+            <a
+              href="/"
+              className="inline-flex items-center justify-center rounded-2xl border border-white/20 px-6 py-3 text-sm font-semibold text-white transition hover:border-white/40"
+            >
+              Home
+            </a>
+            <a
+              href="/login"
+              className="inline-flex items-center justify-center rounded-2xl bg-neonGreen px-6 py-3 text-sm font-semibold text-black"
+            >
+              {dashboardCopy.unauthenticated.cta}
+            </a>
+          </div>
+        </div>
       </div>
     );
   }
