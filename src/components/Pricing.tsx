@@ -193,7 +193,7 @@ function PlanCard({
             type="button"
             onClick={onAction}
             disabled={loading}
-            className="flex-1 rounded-2xl bg-neonGreen px-6 py-3 text-center text-base font-semibold text-black transition disabled:opacity-60"
+            className="flex-1 rounded-2xl border border-white/20 bg-black px-6 py-3 text-center text-base font-semibold text-white transition hover:border-white/40 disabled:opacity-60"
           >
             {loading ? "Abriendo Stripe..." : "Start Free Trial"}
           </motion.button>
