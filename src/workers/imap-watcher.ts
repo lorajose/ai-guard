@@ -127,6 +127,7 @@ async function handleEmail(mail: any) {
   const combinedScore = Math.round(heuristicsScore * 0.25 + aiScore * 0.5 + vtScore * 0.25);
 
   await supabaseAdmin.from("checks").insert({
+    user_id: process.env.SUPERADMIN_USER_ID || "a3f88c37-c06f-49b6-9396-6e8e748fae54",
     source: "email",
     label: combinedScore >= 70 ? "ESTAFA" : combinedScore >= 40 ? "SOSPECHOSO" : "SEGURO",
     score: combinedScore,

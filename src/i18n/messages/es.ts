@@ -141,6 +141,7 @@ export const es = {
       description:
         "Envía tu primer mensaje sospechoso para verlo reflejado aquí en tiempo real.",
       cta: "Comenzar verificación",
+      secondaryCta: "Explorar planes",
     },
   },
   navbar: {

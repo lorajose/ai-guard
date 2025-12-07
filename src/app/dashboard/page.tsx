@@ -4,6 +4,7 @@ import { useLocale } from "@/contexts/LocaleProvider";
 import { Locale, messages } from "@/i18n/messages";
 import { createClient } from "@/lib/supabase/client";
 import { AnimatePresence, motion } from "framer-motion";
+import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 
 type CheckRecord = {
@@ -179,18 +180,18 @@ export default function DashboardPage() {
             {dashboardCopy.unauthenticated.description}
           </p>
           <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-center">
-            <a
+            <Link
               href="/"
               className="inline-flex items-center justify-center rounded-2xl border border-white/20 px-6 py-3 text-sm font-semibold text-white transition hover:border-white/40"
             >
               Home
-            </a>
-            <a
+            </Link>
+            <Link
               href="/login"
-              className="inline-flex items-center justify-center rounded-2xl bg-neonGreen px-6 py-3 text-sm font-semibold text-black shadow-[0_10px_30px_rgba(57,255,20,0.3)] transition hover:bg-lime-300"
+              className="inline-flex items-center justify-center rounded-2xl border border-white/20 bg-black px-6 py-3 text-sm font-semibold text-white shadow-[0_10px_30px_rgba(0,0,0,0.4)] transition hover:border-white/40 hover:bg-black/80"
             >
               {dashboardCopy.unauthenticated.cta}
-            </a>
+            </Link>
           </div>
         </div>
       </div>
@@ -437,15 +438,26 @@ function SkeletonRows() {
 
 function EmptyState({ copy }: { copy: DashboardCopy["empty"] }) {
   return (
-    <div className="flex flex-col items-center gap-3 px-6 py-16 text-center">
-      <p className="text-lg font-semibold">{copy.title}</p>
-      <p className="text-sm text-zinc-400">{copy.description}</p>
-      <a
-        href="/shield"
-        className="rounded-full bg-neonGreen px-4 py-2 text-sm font-semibold text-black"
-      >
-        {copy.cta}
-      </a>
+    <div className="flex flex-col items-center gap-4 px-6 py-20 text-center">
+      <div className="rounded-full bg-white/5 px-4 py-1 text-xs uppercase tracking-[0.4em] text-zinc-400">
+        IA Shield
+      </div>
+      <p className="text-2xl font-semibold">{copy.title}</p>
+      <p className="max-w-xl text-sm text-zinc-400">{copy.description}</p>
+      <div className="flex flex-col gap-3 sm:flex-row">
+        <a
+          href="/shield"
+          className="rounded-full border border-white/20 px-5 py-2 text-sm font-semibold text-white transition hover:border-white/40"
+        >
+          {copy.cta}
+        </a>
+        <a
+          href="/pricing"
+          className="rounded-full border border-white/20 bg-black/60 px-5 py-2 text-sm font-semibold text-white transition hover:border-white/40"
+        >
+          {copy.secondaryCta}
+        </a>
+      </div>
     </div>
   );
 }
