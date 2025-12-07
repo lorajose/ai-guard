@@ -143,6 +143,65 @@ export const en = {
       cta: "Start verification",
       secondaryCta: "Explore plans",
     },
+    academy: {
+      title: "IA Academy",
+      description:
+        "Interactive lessons, phishing simulations, and deepfake drills for subscribers.",
+      locked: {
+        eyebrow: "Subscribers only",
+        title: "Unlock IA Academy",
+        description:
+          "Upgrade your plan to access training modules, gamified challenges, and monthly simulations.",
+        cta: "Upgrade plan",
+      },
+      levels: {
+        free: "Free tier",
+        basic: "Basic · PRO",
+        business: "Intermediate · BUSINESS",
+        enterprise: "Advanced · ENTERPRISE",
+      },
+      gamification: {
+        streakLabel: "Day streak",
+        xpLabel: "XP earned",
+        badgeLabel: "Current badge",
+        medalsLabel: "Medals unlocked",
+      },
+      medals: {
+        hunter: "Phishing Hunter",
+        firewall: "AI Firewall",
+        trainee: "SOC Trainee",
+      },
+      modules: [
+        {
+          id: "phishing-basics",
+          title: "Phishing fundamentals",
+          tag: "Theory · 10 min",
+          summary: "Spot spoofed domains, urgent language, and fake login flows.",
+        },
+        {
+          id: "sim-drill",
+          title: "Monthly phishing simulation",
+          tag: "Simulation · 5 min",
+          summary: "Practice with realistic scam emails crafted by IA Shield.",
+        },
+        {
+          id: "deepfake-alert",
+          title: "Deepfake & voice scams",
+          tag: "Vishing · 8 min",
+          summary: "Train your ear to detect urgent voice cloning attempts.",
+        },
+      ],
+      actions: {
+        startLesson: "Open lesson card",
+        startSimulation: "Run phishing simulation",
+        generating: "Generating simulation...",
+        lastSimulation: "Latest phishing simulation",
+        empty: "Run a simulation to get a sample training email.",
+        error: "Could not generate training. Try again soon.",
+        indicators: "Risk indicators",
+        levelTag: "Estimated level",
+      },
+    },
   },
   navbar: {
     public: {

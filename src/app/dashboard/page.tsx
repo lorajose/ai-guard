@@ -51,6 +51,79 @@ export default function DashboardPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCheck, setSelectedCheck] = useState<CheckRecord | null>(null);
   const [planBadge, setPlanBadge] = useState<PlanBadge | null>(null);
+  const academyCopy = dashboardCopy.academy;
+  const modules = academyCopy.modules || [];
+  const [selectedModuleId, setSelectedModuleId] = useState<string>(
+    modules[0]?.id ?? ""
+  );
+  const [simulation, setSimulation] = useState<any | null>(null);
+  const [simulationLoading, setSimulationLoading] = useState(false);
+  const [simulationError, setSimulationError] = useState<string | null>(null);
+  const normalizedPlan = planBadge?.plan?.toLowerCase() ?? "free";
+  const planStatus = planBadge?.status ?? "inactive";
+  const hasAcademyAccess =
+    normalizedPlan !== "free" &&
+    ["active", "trialing", "past_due"].includes(planStatus);
+
+  useEffect(() => {
+    setSelectedModuleId(modules[0]?.id ?? "");
+  }, [modules]);
+
+  const academyLevelLabel = useMemo(() => {
+    if (normalizedPlan.includes("enterprise"))
+      return academyCopy.levels.enterprise;
+    if (normalizedPlan.includes("business") || normalizedPlan.includes("pro"))
+      return academyCopy.levels.business;
+    if (normalizedPlan.includes("lite") || normalizedPlan.includes("basic"))
+      return academyCopy.levels.basic;
+    return academyCopy.levels.free;
+  }, [academyCopy.levels, normalizedPlan]);
+
+  const activeModule =
+    modules.find((module) => module.id === selectedModuleId) || modules[0];
+
+  const xpEarned = useMemo(() => checks.length * 5, [checks.length]);
+  const streak = useMemo(
+    () => Math.max(checks.length ? Math.min(checks.length, 21) : 1, 1),
+    [checks.length]
+  );
+  const progress = useMemo(
+    () => Math.min(((xpEarned % 120) / 120) * 100, 100),
+    [xpEarned]
+  );
+  const medalsUnlocked = useMemo(() => {
+    const unlocked: string[] = [];
+    if (checks.length > 0) unlocked.push(academyCopy.medals.hunter);
+    if (checks.length >= 10) unlocked.push(academyCopy.medals.firewall);
+    if (checks.length >= 25) unlocked.push(academyCopy.medals.trainee);
+    return unlocked;
+  }, [academyCopy.medals, checks.length]);
+
+  const handleGenerateSimulation = useCallback(async () => {
+    if (!hasAcademyAccess) return;
+    setSimulationError(null);
+    setSimulationLoading(true);
+    try {
+      const response = await fetch("/api/academy/phish", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          brand: "IA Shield",
+          scenario: "Dashboard monthly training",
+        }),
+      });
+      if (!response.ok) {
+        throw new Error("Failed request");
+      }
+      const payload = await response.json();
+      setSimulation(payload);
+    } catch (error) {
+      console.error(error);
+      setSimulationError(academyCopy.actions.error);
+    } finally {
+      setSimulationLoading(false);
+    }
+  }, [academyCopy.actions.error, hasAcademyAccess]);
 
   useEffect(() => {
     async function fetchUser() {
@@ -261,6 +334,182 @@ export default function DashboardPage() {
                 loading={loadingChecks}
               />
             ))}
+          </section>
+
+          <section className="mt-10 rounded-[32px] border border-white/10 bg-gradient-to-br from-zinc-950 via-black to-cyberBlue/10 p-6 shadow-[0_30px_80px_rgba(0,0,0,0.4)]">
+            <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+              <div>
+                <p className="text-xs uppercase tracking-[0.4em] text-zinc-500">
+                  {academyCopy.title}
+                </p>
+                <h2 className="mt-2 text-2xl font-semibold">
+                  {academyCopy.title}
+                </h2>
+                <p className="text-sm text-zinc-400">{academyCopy.description}</p>
+              </div>
+              {planBadge && (
+                <span className="inline-flex w-fit items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-1 text-xs uppercase tracking-wider text-zinc-300">
+                  🎮 {academyLevelLabel}
+                </span>
+              )}
+            </div>
+
+            {hasAcademyAccess ? (
+              <div className="mt-6 grid gap-6 lg:grid-cols-[1.1fr_0.95fr]">
+                <div className="space-y-5">
+                  <div className="grid gap-4 sm:grid-cols-3">
+                    <div className="rounded-2xl border border-white/10 bg-black/40 p-4">
+                      <p className="text-xs uppercase tracking-wide text-zinc-500">
+                        {academyCopy.gamification.streakLabel}
+                      </p>
+                      <p className="mt-2 text-3xl font-semibold">{streak}d</p>
+                    </div>
+                    <div className="rounded-2xl border border-white/10 bg-black/40 p-4">
+                      <p className="text-xs uppercase tracking-wide text-zinc-500">
+                        {academyCopy.gamification.xpLabel}
+                      </p>
+                      <p className="mt-2 text-3xl font-semibold">{xpEarned}</p>
+                      <div className="mt-3 h-1.5 rounded-full bg-white/10">
+                        <div
+                          className="h-full rounded-full bg-neonGreen"
+                          style={{ width: `${progress}%` }}
+                        />
+                      </div>
+                    </div>
+                    <div className="rounded-2xl border border-white/10 bg-black/40 p-4">
+                      <p className="text-xs uppercase tracking-wide text-zinc-500">
+                        {academyCopy.gamification.badgeLabel}
+                      </p>
+                      <p className="mt-2 text-lg font-semibold">
+                        {academyLevelLabel}
+                      </p>
+                      <p className="mt-2 text-xs uppercase tracking-wide text-zinc-500">
+                        {academyCopy.gamification.medalsLabel}
+                      </p>
+                      <div className="mt-1 flex flex-wrap gap-2 text-xs">
+                        {(medalsUnlocked.length ? medalsUnlocked : ["—"]).map(
+                          (medal) => (
+                            <span
+                              key={medal}
+                              className="rounded-full border border-white/20 px-2 py-0.5 text-white/80"
+                            >
+                              {medal}
+                            </span>
+                          )
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="rounded-3xl border border-white/10 bg-black/30 p-5">
+                    <div className="flex flex-wrap items-center justify-between gap-3">
+                      <div>
+                        <p className="text-xs uppercase tracking-wide text-zinc-500">
+                          {activeModule?.tag}
+                        </p>
+                        <h3 className="text-xl font-semibold">
+                          {activeModule?.title}
+                        </h3>
+                        <p className="mt-2 text-sm text-zinc-400">
+                          {activeModule?.summary}
+                        </p>
+                      </div>
+                      <button className="rounded-full border border-white/20 px-4 py-2 text-sm font-semibold text-white transition hover:border-white/40">
+                        {academyCopy.actions.startLesson}
+                      </button>
+                    </div>
+                    <div className="mt-4 flex flex-wrap gap-2">
+                      {modules.map((module) => (
+                        <button
+                          key={module.id}
+                          onClick={() => setSelectedModuleId(module.id)}
+                          className={`rounded-full border px-4 py-1 text-xs font-semibold transition ${
+                            selectedModuleId === module.id
+                              ? "border-neonGreen bg-neonGreen/20 text-neonGreen"
+                              : "border-white/10 bg-white/5 text-zinc-300 hover:border-white/30"
+                          }`}
+                        >
+                          {module.title}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="rounded-3xl border border-white/10 bg-black/40 p-5">
+                  <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                      <p className="text-xs uppercase tracking-wide text-zinc-500">
+                        {academyCopy.actions.lastSimulation}
+                      </p>
+                      <p className="text-lg font-semibold">
+                        {simulation?.subject || "—"}
+                      </p>
+                      {simulation?.from_email && (
+                        <p className="text-xs text-zinc-500">
+                          {simulation.from_name} · {simulation.from_email}
+                        </p>
+                      )}
+                    </div>
+                    <button
+                      onClick={handleGenerateSimulation}
+                      disabled={simulationLoading}
+                      className="rounded-full border border-white/20 px-4 py-2 text-sm font-semibold text-white transition hover:border-white/40 disabled:opacity-60"
+                    >
+                      {simulationLoading
+                        ? academyCopy.actions.generating
+                        : academyCopy.actions.startSimulation}
+                    </button>
+                  </div>
+                  {simulationError && (
+                    <p className="mt-3 text-sm text-red-300">{simulationError}</p>
+                  )}
+                  <div className="mt-4 min-h-[140px] rounded-2xl border border-white/10 bg-black/60 p-4 text-sm text-zinc-200">
+                    {simulation?.body_text || academyCopy.actions.empty}
+                  </div>
+                  {simulation && (
+                    <div className="mt-4 text-xs text-zinc-400">
+                      <p className="font-semibold uppercase tracking-wide">
+                        {academyCopy.actions.indicators}
+                      </p>
+                      <ul className="mt-2 list-disc space-y-1 pl-4">
+                        {simulation.indicadores_riesgo?.map(
+                          (risk: string, index: number) => (
+                            <li key={`risk-${index}`}>{risk}</li>
+                          )
+                        )}
+                      </ul>
+                      <p className="mt-3">
+                        <span className="text-zinc-500">
+                          {academyCopy.actions.levelTag}:
+                        </span>{" "}
+                        <span className="font-semibold text-white">
+                          {simulation.nivel_estimado || "—"}
+                        </span>
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            ) : (
+              <div className="mt-6 rounded-3xl border border-dashed border-white/20 bg-black/40 p-6 text-center">
+                <p className="text-xs uppercase tracking-[0.4em] text-zinc-500">
+                  {academyCopy.locked.eyebrow}
+                </p>
+                <h3 className="mt-3 text-2xl font-semibold">
+                  {academyCopy.locked.title}
+                </h3>
+                <p className="mt-2 text-sm text-zinc-400">
+                  {academyCopy.locked.description}
+                </p>
+                <Link
+                  href="/pricing"
+                  className="mt-5 inline-flex items-center justify-center rounded-full border border-white/20 px-5 py-2 text-sm font-semibold text-white transition hover:border-white/40"
+                >
+                  {academyCopy.locked.cta}
+                </Link>
+              </div>
+            )}
           </section>
 
           <section className="mt-10 rounded-3xl border border-white/5 bg-white/5 p-6 backdrop-blur-xl">

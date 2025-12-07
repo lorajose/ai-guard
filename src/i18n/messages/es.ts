@@ -143,6 +143,66 @@ export const es = {
       cta: "Comenzar verificación",
       secondaryCta: "Explorar planes",
     },
+    academy: {
+      title: "IA Academy",
+      description:
+        "Lecciones interactivas, simulaciones de phishing y ejercicios de deepfake para suscriptores.",
+      locked: {
+        eyebrow: "Solo suscriptores",
+        title: "Desbloquea IA Academy",
+        description:
+          "Mejora tu plan para acceder a módulos de entrenamiento, retos gamificados y simulaciones mensuales.",
+        cta: "Mejorar plan",
+      },
+      levels: {
+        free: "Plan gratuito",
+        basic: "Básico · PRO",
+        business: "Intermedio · BUSINESS",
+        enterprise: "Avanzado · ENTERPRISE",
+      },
+      gamification: {
+        streakLabel: "Racha de días",
+        xpLabel: "XP obtenidos",
+        badgeLabel: "Insignia actual",
+        medalsLabel: "Medallas desbloqueadas",
+      },
+      medals: {
+        hunter: "Phishing Hunter",
+        firewall: "AI Firewall",
+        trainee: "SOC Trainee",
+      },
+      modules: [
+        {
+          id: "phishing-basics",
+          title: "Fundamentos de phishing",
+          tag: "Teoría · 10 min",
+          summary:
+            "Detecta dominios suplantados, lenguaje urgente y flujos falsos de login.",
+        },
+        {
+          id: "sim-drill",
+          title: "Simulación mensual de phishing",
+          tag: "Simulación · 5 min",
+          summary: "Practica con correos realistas generados por IA Shield.",
+        },
+        {
+          id: "deepfake-alert",
+          title: "Deepfake y estafas de voz",
+          tag: "Vishing · 8 min",
+          summary: "Entrena el oído para detectar intentos urgentes de voz clonada.",
+        },
+      ],
+      actions: {
+        startLesson: "Abrir lección",
+        startSimulation: "Generar simulación",
+        generating: "Creando simulación...",
+        lastSimulation: "Última simulación de phishing",
+        empty: "Ejecuta una simulación para obtener un correo de entrenamiento.",
+        error: "No pudimos generar entrenamiento. Intenta de nuevo.",
+        indicators: "Indicadores de riesgo",
+        levelTag: "Nivel estimado",
+      },
+    },
   },
   navbar: {
     public: {
