@@ -141,6 +141,7 @@ export const en = {
       description:
         "Send your first suspicious message to see live detections here.",
       cta: "Start verification",
+      secondaryCta: "Explore plans",
     },
   },
   navbar: {
