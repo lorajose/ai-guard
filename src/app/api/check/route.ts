@@ -2,7 +2,7 @@ import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { createServerClient } from "@supabase/ssr";
 import { createHash } from "crypto";
 import OpenAI from "openai";
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
 
 const MODEL = "gpt-4o-mini";
@@ -22,6 +22,7 @@ const openai = process.env.OPENAI_API_KEY
       apiKey: process.env.OPENAI_API_KEY,
     })
   : null;
+const openAiCache = new Map<string, { expiresAt: number; payload: any }>();
 
 const shortUrlRegex =
   /(bit\.ly|tinyurl\.com|t\.co|ow\.ly|buff\.ly|goo\.gl|is\.gd|cutt\.ly|rebrand\.ly|bitly\.com)/i;
@@ -66,41 +67,51 @@ export async function POST(request: NextRequest) {
 
     const prompt = buildPrompt(text, source);
 
-    const response = await openai.responses.create({
-      model: MODEL,
-      input: prompt,
-      temperature: 0.2,
-      response_format: {
-        type: "json_schema",
-        json_schema: {
-          name: "classification",
-          schema: {
-            type: "object",
-            properties: {
-              label: {
-                type: "string",
-                description: "ESTAFA, SOSPECHOSO o SEGURO",
+    const cached = openAiCache.get(prompt);
+    let aiPayload;
+    if (cached && cached.expiresAt > Date.now()) {
+      aiPayload = cached.payload;
+    } else {
+      const response = await openai.responses.create({
+        model: MODEL,
+        input: prompt,
+        temperature: 0.2,
+        response_format: {
+          type: "json_schema",
+          json_schema: {
+            name: "classification",
+            schema: {
+              type: "object",
+              properties: {
+                label: {
+                  type: "string",
+                  description: "ESTAFA, SOSPECHOSO o SEGURO",
+                },
+                score: {
+                  type: "number",
+                  description: "Confianza 0-100",
+                },
+                razones: {
+                  type: "array",
+                  items: { type: "string" },
+                },
+                consejo_breve: {
+                  type: "string",
+                },
               },
-              score: {
-                type: "number",
-                description: "Confianza 0-100",
-              },
-              razones: {
-                type: "array",
-                items: { type: "string" },
-              },
-              consejo_breve: {
-                type: "string",
-              },
+              required: ["label", "score", "razones", "consejo_breve"],
+              additionalProperties: false,
             },
-            required: ["label", "score", "razones", "consejo_breve"],
-            additionalProperties: false,
           },
         },
-      },
-    });
+      });
 
-    const aiPayload = parseAIResponse(response);
+      aiPayload = parseAIResponse(response);
+      openAiCache.set(prompt, {
+        payload: aiPayload,
+        expiresAt: Date.now() + 1000 * 60 * 5,
+      });
+    }
 
     const finalLabel = normalizeLabel(
       aiPayload.label,
@@ -193,6 +204,34 @@ Fuente: ${source ?? "desconocida"}
 Mensaje: """${text}"""`;
 }
 
+const getSupabaseClient = (() => {
+  let clientPromise:
+    | ReturnType<typeof createServerClient>
+    | undefined;
+  return async () => {
+    if (clientPromise) return clientPromise;
+    const cookieStore = await cookies();
+    clientPromise = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        cookies: {
+          get(name) {
+            return cookieStore.get(name)?.value;
+          },
+          set(name, value, options) {
+            cookieStore.set({ name, value, ...options });
+          },
+          remove(name, options) {
+            cookieStore.delete({ name, ...options });
+          },
+        },
+      }
+    );
+    return clientPromise;
+  };
+})();
+
 async function persistCheck({
   text,
   source,
@@ -211,25 +250,7 @@ async function persistCheck({
   heuristicReasons: string[];
 }) {
   try {
-    const cookieStore = await cookies();
-    const supabase = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      {
-        cookies: {
-          get(name) {
-            return cookieStore.get(name)?.value;
-          },
-          set(name, value, options) {
-            cookieStore.set({ name, value, ...options });
-          },
-          remove(name, options) {
-            cookieStore.delete({ name, ...options });
-          },
-        },
-      }
-    );
-
+    const supabase = await getSupabaseClient();
     const {
       data: { user },
     } = await supabase.auth.getUser();
