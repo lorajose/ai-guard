@@ -11,17 +11,43 @@ const openai = new OpenAI({
 const ACADEMY_MODEL = "gpt-4o-mini";
 
 function extractJsonText(completion: OpenAI.Beta.Responses.Response) {
-  const block = completion.output?.find((item) =>
-    item.content?.some((content) => content.type === "output_text")
-  );
-  const contentBlock = block?.content?.find(
-    (content) => content.type === "output_text"
-  );
-  return (
-    (contentBlock && "text" in contentBlock ? contentBlock.text : null) ||
-    completion.output_text?.[0] ||
-    null
-  );
+  if (completion.output_text?.length) {
+    return completion.output_text.join("\n");
+  }
+
+  const segments =
+    completion.output
+      ?.flatMap((block) => block.content ?? [])
+      .map((content) => {
+        if (!content) return "";
+        if ("text" in content && typeof content.text === "string") {
+          return content.text;
+        }
+        // Some SDK versions wrap the text array
+        if (
+          "type" in content &&
+          content.type === "output_text" &&
+          Array.isArray((content as any).text)
+        ) {
+          return (content as any).text
+            .map((entry: any) =>
+              typeof entry === "string"
+                ? entry
+                : typeof entry?.text === "string"
+                ? entry.text
+                : ""
+            )
+            .join("");
+        }
+        return "";
+      })
+      .filter(Boolean);
+
+  if (segments && segments.length) {
+    return segments.join("\n");
+  }
+
+  return null;
 }
 
 export async function generarSimulacionPhishing({
