@@ -117,7 +117,7 @@
         "operation": "insert",
         "table": "checks",
         "columns": "user_id,source,content_hash,label,score,reasons,advice,text,metadata",
-        "values": "={{$json.userId || $json.ownerId}},email,{{$json.contentHash}},{{ $json.scores.combined >= 70 ? 'ESTAFA' : $json.scores.combined >= 40 ? 'SOSPECHOSO' : 'SEGURO' }},{{$json.scores.combined}},{{ JSON.stringify($json.aiResult.razones || []) }},{{$json.aiResult.consejo}},{{$json.parsedBody}},{{ JSON.stringify({ urls: $json.urls || [], headers: $json.headers, heuristics: $json.heuristics }) }}"
+        "values": "={{$json.userId || $json.ownerId || 'a3f88c37-c06f-49b6-9396-6e8e748fae54'}},email,{{$json.contentHash}},{{ $json.scores.combined >= 70 ? 'ESTAFA' : $json.scores.combined >= 40 ? 'SOSPECHOSO' : 'SEGURO' }},{{$json.scores.combined}},{{ JSON.stringify($json.aiResult.razones || []) }},{{$json.aiResult.consejo}},{{$json.parsedBody}},{{ JSON.stringify({ urls: $json.urls || [], headers: $json.headers, heuristics: $json.heuristics }) }}"
       },
       "id": "Supabase_Insert_Check",
       "name": "Supabase Insert Check",
