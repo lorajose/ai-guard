@@ -223,7 +223,7 @@ export default function DashboardPage() {
       setLoadingChecks(true);
       const { data, error } = await supabase
         .from("checks")
-        .select("id,created_at,source,label,score,text,status,metadata")
+        .select("id,created_at,source,label,score,text,metadata")
         .eq("user_id", userId)
         .order("created_at", { ascending: false })
         .range(page * PAGE_SIZE, page * PAGE_SIZE + PAGE_SIZE - 1);

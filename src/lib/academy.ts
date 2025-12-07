@@ -89,25 +89,73 @@ export async function generarLeccionTeorica({
   nivel: string;
 }) {
   if (!openai.apiKey) {
-    throw new Error("OPENAI_API_KEY is not configured");
+    console.warn("OPENAI_API_KEY is not configured. Returning fallback lesson.");
+    return fallbackLesson(titulo, nivel);
   }
 
   const userPrompt = IA_ACADEMY_LESSON_PROMPT(titulo, nivel);
 
-  const completion = await openai.responses.create({
-    model: ACADEMY_MODEL,
-    input: [
-      { role: "system", content: IA_ACADEMY_SYSTEM_PROMPT },
-      { role: "user", content: userPrompt },
-    ],
-    response_format: { type: "json_object" },
-  });
+  try {
+    const completion = await openai.responses.create({
+      model: ACADEMY_MODEL,
+      input: [
+        { role: "system", content: IA_ACADEMY_SYSTEM_PROMPT },
+        { role: "user", content: userPrompt },
+      ],
+      response_format: { type: "json_object" },
+    });
 
-  const jsonText = extractJsonText(completion);
+    const jsonText = extractJsonText(completion);
 
-  if (!jsonText) {
-    throw new Error("OpenAI response did not include JSON payload");
+    if (!jsonText) {
+      throw new Error("OpenAI response did not include JSON payload");
+    }
+
+    return JSON.parse(jsonText);
+  } catch (error) {
+    console.error("Error generating lesson with OpenAI:", error);
+    return fallbackLesson(titulo, nivel);
   }
+}
 
-  return JSON.parse(jsonText);
+function fallbackLesson(titulo: string, nivel: string) {
+  return {
+    tipo: "lesson",
+    titulo,
+    nivel,
+    resumen:
+      "Aprende a identificar mensajes sospechosos, interpretar señales de ingeniería social y tomar decisiones inmediatas para proteger a tu familia o equipo.",
+    secciones: [
+      {
+        subtitulo: "Señales clave en correos y chats",
+        contenido_html:
+          "<p>Busca urgencia artificial, solicitudes de pago inesperadas y dominios similares al original (ej. secure-paypal-us.com).</p><ul><li>Verifica el remitente y los enlaces antes de dar clic.</li><li>No compartas códigos 2FA o contraseñas por chat.</li><li>Cuando tengas duda, comunícate por un canal oficial.</li></ul>",
+      },
+      {
+        subtitulo: "Revisión rápida antes de responder",
+        contenido_html:
+          "<p>Comparte el mensaje con IA Shield o tu equipo antes de contestar. Documenta la fecha, origen y screenshots para auditoría.</p><ul><li>Revisa si hay archivos adjuntos o links acortados.</li><li>Evalúa si el tono coincide con la persona o empresa real.</li><li>Si mencionan pagos, valida con finanzas antes de mover dinero.</li></ul>",
+      },
+    ],
+    mini_quiz: [
+      {
+        pregunta:
+          "Un correo dice: “Último aviso, transfiere hoy mismo a esta nueva cuenta o perderás el contrato”. ¿Qué haces?",
+        opciones: [
+          "Respondes y solicitas más detalles",
+          "Verificas por teléfono con el contacto real",
+          "Haces la transferencia para evitar problemas",
+          "Ignoras el mensaje por completo",
+        ],
+        respuesta_correcta: "Verificas por teléfono con el contacto real",
+        explicacion:
+          "Los cambios urgentes de cuenta son comunes en fraudes BEC. Siempre valida por un canal confiable antes de pagar.",
+      },
+    ],
+    checklist_final: [
+      "Detecta urgencia o miedo como señal de alerta.",
+      "Consulta dominios y enlaces en un visor seguro antes de abrirlos.",
+      "Escala mensajes dudosos al equipo de seguridad o IA Shield para análisis.",
+    ],
+  };
 }
