@@ -5,7 +5,9 @@ import { Locale, messages } from "@/i18n/messages";
 import { createClient } from "@/lib/supabase/client";
 import { AnimatePresence, motion } from "framer-motion";
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { FixedSizeList as List, type ListChildComponentProps } from "react-window";
+import { memo, useCallback, useEffect, useMemo, useState } from "react";
+import type { CSSProperties } from "react";
 
 type CheckRecord = {
   id: string;
@@ -26,6 +28,9 @@ type PlanBadge = {
 
 type DashboardCopy = (typeof messages)["en"]["dashboard"];
 
+const PAGE_SIZE = 25;
+const ROW_HEIGHT = 96;
+
 export default function DashboardPage() {
   const { locale } = useLocale();
   const dashboardCopy = messages[locale].dashboard;
@@ -40,6 +45,8 @@ export default function DashboardPage() {
   const [loadingUser, setLoadingUser] = useState(true);
   const [checks, setChecks] = useState<CheckRecord[]>([]);
   const [loadingChecks, setLoadingChecks] = useState(true);
+  const [page, setPage] = useState(0);
+  const [hasMore, setHasMore] = useState(true);
   const [selectedFilter, setSelectedFilter] = useState<FilterOption>("ALL");
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCheck, setSelectedCheck] = useState<CheckRecord | null>(null);
@@ -65,6 +72,12 @@ export default function DashboardPage() {
   }, [supabase]);
 
   useEffect(() => {
+    setChecks([]);
+    setPage(0);
+    setHasMore(true);
+  }, [userId]);
+
+  useEffect(() => {
     if (!userId) return;
     let isMounted = true;
 
@@ -72,15 +85,18 @@ export default function DashboardPage() {
       setLoadingChecks(true);
       const { data, error } = await supabase
         .from("checks")
-        .select("*")
+        .select("id,created_at,source,label,score,text,status")
         .eq("user_id", userId)
         .order("created_at", { ascending: false })
-        .limit(100);
+        .range(page * PAGE_SIZE, page * PAGE_SIZE + PAGE_SIZE - 1);
       if (!isMounted) return;
       if (error) {
         console.error("Error fetching checks:", error.message);
       } else if (data) {
-        setChecks(data as CheckRecord[]);
+        setChecks((prev) =>
+          page === 0 ? (data as CheckRecord[]) : [...prev, ...(data as CheckRecord[])]
+        );
+        setHasMore((data?.length ?? 0) === PAGE_SIZE);
       }
       setLoadingChecks(false);
     }
@@ -117,7 +133,7 @@ export default function DashboardPage() {
       isMounted = false;
       supabase.removeChannel(channel);
     };
-  }, [supabase, userId]);
+  }, [supabase, userId, page]);
 
   const filteredChecks = useMemo(() => {
     return checks.filter((check) => {
@@ -126,12 +142,25 @@ export default function DashboardPage() {
         check.label?.toUpperCase() === selectedFilter;
       const term = searchTerm.trim().toLowerCase();
       const matchesSearch = term
-        ? check.text?.toLowerCase().includes(term) ||
-          check.source?.toLowerCase().includes(term)
+        ? (check.text || "").toLowerCase().includes(term) ||
+          (check.source || "").toLowerCase().includes(term)
         : true;
       return matchesFilter && matchesSearch;
     });
   }, [checks, searchTerm, selectedFilter]);
+
+  const handleRowClick = useCallback((check: CheckRecord) => {
+    setSelectedCheck(check);
+  }, []);
+
+  const loadMore = useCallback(() => {
+    if (loadingChecks || !hasMore) return;
+    setPage((prev) => prev + 1);
+  }, [hasMore, loadingChecks]);
+
+  const shouldVirtualize = filteredChecks.length > 20;
+  const listHeight =
+    Math.max(Math.min(filteredChecks.length, 8), 1) * ROW_HEIGHT;
 
   const stats = useMemo(() => {
     const total = checks.length;
@@ -187,7 +216,7 @@ export default function DashboardPage() {
               Home
             </Link>
             <Link
-              href="/login"
+              href="/login?guest=1"
               className="inline-flex items-center justify-center rounded-2xl border border-white/20 bg-black px-6 py-3 text-sm font-semibold text-white shadow-[0_10px_30px_rgba(0,0,0,0.4)] transition hover:border-white/40 hover:bg-black/80"
             >
               {dashboardCopy.unauthenticated.cta}
@@ -276,34 +305,41 @@ export default function DashboardPage() {
                 <SkeletonRows />
               ) : filteredChecks.length === 0 ? (
                 <EmptyState copy={dashboardCopy.empty} />
+              ) : shouldVirtualize ? (
+                <VirtualizedCheckList
+                  items={filteredChecks}
+                  locale={locale}
+                  copy={dashboardCopy.table}
+                  onRowClick={handleRowClick}
+                  height={listHeight}
+                />
               ) : (
-                <ul className="divide-y divide-white/5">
+                <div className="divide-y divide-white/5">
                   {filteredChecks.map((check) => (
-                    <li
+                    <CheckRowItem
                       key={check.id}
-                      className="grid cursor-pointer grid-cols-1 gap-4 px-4 py-4 text-sm transition hover:bg-white/5 md:grid-cols-[140px_1fr_150px_200px_120px] md:items-center"
-                      onClick={() => setSelectedCheck(check)}
-                    >
-                      <span className="text-zinc-400">
-                        {formatDate(check.created_at, locale)}
-                      </span>
-                      <span className="font-medium">
-                        {check.source || dashboardCopy.table.unknownSource}
-                      </span>
-                      <DashboardLabelBadge label={check.label} />
-                      <DashboardScoreBar score={check.score} label={check.label} />
-                      <button
-                        className="rounded-full border border-white/20 px-4 py-1 text-xs text-white transition hover:border-white/40"
-                        onClick={(event) => {
-                          event.stopPropagation();
-                          setSelectedCheck(check);
-                        }}
-                      >
-                        {dashboardCopy.table.viewDetails}
-                      </button>
-                    </li>
+                      check={check}
+                      locale={locale}
+                      copy={dashboardCopy.table}
+                      onRowClick={handleRowClick}
+                    />
                   ))}
-                </ul>
+                </div>
+              )}
+              {filteredChecks.length > 0 && (
+                <div className="border-t border-white/5 bg-black/20 px-4 py-4 text-center">
+                  <button
+                    onClick={loadMore}
+                    disabled={loadingChecks || !hasMore}
+                    className="rounded-full border border-white/20 px-6 py-2 text-sm font-semibold text-white transition hover:border-white/40 disabled:opacity-50"
+                  >
+                    {loadingChecks
+                      ? "Loading..."
+                      : hasMore
+                      ? "Load more"
+                      : "No more results"}
+                  </button>
+                </div>
               )}
             </div>
           </section>
@@ -319,7 +355,11 @@ export default function DashboardPage() {
   );
 }
 
-function Sidebar({ copy }: { copy: DashboardCopy["sidebar"] }) {
+const Sidebar = memo(function Sidebar({
+  copy,
+}: {
+  copy: DashboardCopy["sidebar"];
+}) {
   return (
     <aside className="border-b border-white/10 bg-black/30 px-6 py-6 backdrop-blur md:px-8 lg:min-h-screen lg:w-72 lg:border-r">
       <div className="flex items-center gap-3">
@@ -353,9 +393,9 @@ function Sidebar({ copy }: { copy: DashboardCopy["sidebar"] }) {
       </nav>
     </aside>
   );
-}
+});
 
-function StatCard({
+const StatCard = memo(function StatCard({
   label,
   value,
   loading,
@@ -374,9 +414,102 @@ function StatCard({
       )}
     </div>
   );
-}
+});
 
-export function DashboardLabelBadge({ label }: { label: string }) {
+type RowData = {
+  items: CheckRecord[];
+  locale: Locale;
+  copy: DashboardCopy["table"];
+  onRowClick: (check: CheckRecord) => void;
+};
+
+const CheckRowItem = memo(function CheckRowItem({
+  check,
+  locale,
+  copy,
+  onRowClick,
+  style,
+}: {
+  check: CheckRecord;
+  locale: Locale;
+  copy: DashboardCopy["table"];
+  onRowClick: (check: CheckRecord) => void;
+  style?: CSSProperties;
+}) {
+  return (
+    <div
+      style={style}
+      className="grid cursor-pointer grid-cols-1 gap-4 px-4 py-4 text-sm transition hover:bg-white/5 md:grid-cols-[140px_1fr_150px_200px_120px] md:items-center"
+      onClick={() => onRowClick(check)}
+    >
+      <span className="text-zinc-400">
+        {formatDate(check.created_at, locale)}
+      </span>
+      <span className="font-medium">
+        {check.source || copy.unknownSource}
+      </span>
+      <DashboardLabelBadge label={check.label} />
+      <DashboardScoreBar score={check.score} label={check.label} />
+      <button
+        className="rounded-full border border-white/20 px-4 py-1 text-xs text-white transition hover:border-white/40"
+        onClick={(event) => {
+          event.stopPropagation();
+          onRowClick(check);
+        }}
+      >
+        {copy.viewDetails}
+      </button>
+    </div>
+  );
+});
+
+const VirtualizedRow = memo(
+  ({ data, index, style }: ListChildComponentProps<RowData>) => {
+    const check = data.items[index];
+    if (!check) return null;
+    return (
+      <CheckRowItem
+        check={check}
+        locale={data.locale}
+        copy={data.copy}
+        onRowClick={data.onRowClick}
+        style={style}
+      />
+    );
+  }
+);
+
+const VirtualizedCheckList = memo(function VirtualizedCheckList({
+  items,
+  locale,
+  copy,
+  onRowClick,
+  height,
+}: {
+  items: CheckRecord[];
+  locale: Locale;
+  copy: DashboardCopy["table"];
+  onRowClick: (check: CheckRecord) => void;
+  height: number;
+}) {
+  return (
+    <List
+      height={height}
+      itemCount={items.length}
+      itemSize={ROW_HEIGHT}
+      width="100%"
+      itemData={{ items, locale, copy, onRowClick }}
+    >
+      {VirtualizedRow}
+    </List>
+  );
+});
+
+export const DashboardLabelBadge = memo(function DashboardLabelBadge({
+  label,
+}: {
+  label: string;
+}) {
   const normalized = label?.toUpperCase();
   const colors: Record<string, string> = {
     ESTAFA: "bg-red-500/20 text-red-300 border-red-500/40",
@@ -393,9 +526,9 @@ export function DashboardLabelBadge({ label }: { label: string }) {
       {normalized || "N/A"}
     </span>
   );
-}
+});
 
-export function DashboardScoreBar({
+export const DashboardScoreBar = memo(function DashboardScoreBar({
   score,
   label,
 }: {
@@ -421,7 +554,7 @@ export function DashboardScoreBar({
       <p className="mt-1 text-xs text-zinc-500">{Math.round(score)}%</p>
     </div>
   );
-}
+});
 
 function SkeletonRows() {
   return (
