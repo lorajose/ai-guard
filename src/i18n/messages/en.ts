@@ -154,6 +154,12 @@ export const en = {
           "Upgrade your plan to access training modules, gamified challenges, and monthly simulations.",
         cta: "Upgrade plan",
       },
+      freePreview: {
+        eyebrow: "Level 1 unlocked",
+        title: "Try the first mission",
+        description:
+          "Complete the intro lesson and run your first phishing simulation. Upgrade to unlock the full academy.",
+      },
       levels: {
         free: "Free tier",
         basic: "Basic · PRO",

@@ -154,6 +154,12 @@ export const es = {
           "Mejora tu plan para acceder a módulos de entrenamiento, retos gamificados y simulaciones mensuales.",
         cta: "Mejorar plan",
       },
+      freePreview: {
+        eyebrow: "Nivel 1 desbloqueado",
+        title: "Prueba la primera misión",
+        description:
+          "Completa la lección introductoria y ejecuta tu primera simulación de phishing. Mejora tu plan para desbloquear toda la academia.",
+      },
       levels: {
         free: "Plan gratuito",
         basic: "Básico · PRO",

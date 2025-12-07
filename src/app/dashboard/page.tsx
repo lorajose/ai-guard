@@ -61,13 +61,11 @@ export default function DashboardPage() {
   const [simulationError, setSimulationError] = useState<string | null>(null);
   const normalizedPlan = planBadge?.plan?.toLowerCase() ?? "free";
   const planStatus = planBadge?.status ?? "inactive";
-  const hasAcademyAccess =
+  const isFreeTier = normalizedPlan === "free";
+  const hasFullAcademyAccess =
     normalizedPlan !== "free" &&
     ["active", "trialing", "past_due"].includes(planStatus);
-
-  useEffect(() => {
-    setSelectedModuleId(modules[0]?.id ?? "");
-  }, [modules]);
+  const canAccessAcademy = hasFullAcademyAccess || isFreeTier;
 
   const academyLevelLabel = useMemo(() => {
     if (normalizedPlan.includes("enterprise"))
@@ -79,8 +77,28 @@ export default function DashboardPage() {
     return academyCopy.levels.free;
   }, [academyCopy.levels, normalizedPlan]);
 
+  const unlockedModuleIds = useMemo(() => {
+    const base = isFreeTier ? modules.slice(0, 1) : modules;
+    return new Set(base.map((module) => module.id));
+  }, [isFreeTier, modules]);
+
+  useEffect(() => {
+    const fallbackId =
+      modules.find((module) => unlockedModuleIds.has(module.id))?.id ??
+      modules[0]?.id ??
+      "";
+    setSelectedModuleId((previous) =>
+      previous && unlockedModuleIds.has(previous) ? previous : fallbackId
+    );
+  }, [modules, unlockedModuleIds]);
+
   const activeModule =
-    modules.find((module) => module.id === selectedModuleId) || modules[0];
+    modules.find(
+      (module) =>
+        module.id === selectedModuleId && unlockedModuleIds.has(module.id)
+    ) ||
+    modules.find((module) => unlockedModuleIds.has(module.id)) ||
+    modules[0];
 
   const xpEarned = useMemo(() => checks.length * 5, [checks.length]);
   const streak = useMemo(
@@ -100,7 +118,7 @@ export default function DashboardPage() {
   }, [academyCopy.medals, checks.length]);
 
   const handleGenerateSimulation = useCallback(async () => {
-    if (!hasAcademyAccess) return;
+    if (!canAccessAcademy) return;
     setSimulationError(null);
     setSimulationLoading(true);
     try {
@@ -123,7 +141,7 @@ export default function DashboardPage() {
     } finally {
       setSimulationLoading(false);
     }
-  }, [academyCopy.actions.error, hasAcademyAccess]);
+  }, [academyCopy.actions.error, canAccessAcademy]);
 
   useEffect(() => {
     async function fetchUser() {
@@ -158,7 +176,7 @@ export default function DashboardPage() {
       setLoadingChecks(true);
       const { data, error } = await supabase
         .from("checks")
-        .select("id,created_at,source,label,score,text,status")
+        .select("id,created_at,source,label,score,text,status,metadata")
         .eq("user_id", userId)
         .order("created_at", { ascending: false })
         .range(page * PAGE_SIZE, page * PAGE_SIZE + PAGE_SIZE - 1);
@@ -354,7 +372,7 @@ export default function DashboardPage() {
               )}
             </div>
 
-            {hasAcademyAccess ? (
+            {canAccessAcademy ? (
               <div className="mt-6 grid gap-6 lg:grid-cols-[1.1fr_0.95fr]">
                 <div className="space-y-5">
                   <div className="grid gap-4 sm:grid-cols-3">
@@ -419,20 +437,41 @@ export default function DashboardPage() {
                       </button>
                     </div>
                     <div className="mt-4 flex flex-wrap gap-2">
-                      {modules.map((module) => (
-                        <button
-                          key={module.id}
-                          onClick={() => setSelectedModuleId(module.id)}
-                          className={`rounded-full border px-4 py-1 text-xs font-semibold transition ${
-                            selectedModuleId === module.id
-                              ? "border-neonGreen bg-neonGreen/20 text-neonGreen"
-                              : "border-white/10 bg-white/5 text-zinc-300 hover:border-white/30"
-                          }`}
-                        >
-                          {module.title}
-                        </button>
-                      ))}
+                      {modules.map((module) => {
+                        const unlocked = unlockedModuleIds.has(module.id);
+                        return (
+                          <button
+                            key={module.id}
+                            onClick={() => {
+                              if (!unlocked) return;
+                              setSelectedModuleId(module.id);
+                            }}
+                            className={`rounded-full border px-4 py-1 text-xs font-semibold transition ${
+                              unlocked && selectedModuleId === module.id
+                                ? "border-neonGreen bg-neonGreen/20 text-neonGreen"
+                                : unlocked
+                                ? "border-white/10 bg-white/5 text-zinc-300 hover:border-white/30"
+                                : "border-white/5 bg-black/30 text-zinc-500 cursor-not-allowed"
+                            }`}
+                          >
+                            {module.title} {!unlocked && "🔒"}
+                          </button>
+                        );
+                      })}
                     </div>
+                    {isFreeTier && (
+                      <div className="mt-4 rounded-2xl border border-dashed border-neonGreen/40 bg-neonGreen/5 p-4 text-sm text-zinc-300">
+                        <p className="text-xs uppercase tracking-[0.4em] text-neonGreen/80">
+                          {academyCopy.freePreview.eyebrow}
+                        </p>
+                        <p className="mt-1 font-semibold text-white">
+                          {academyCopy.freePreview.title}
+                        </p>
+                        <p className="mt-1 text-zinc-400">
+                          {academyCopy.freePreview.description}
+                        </p>
+                      </div>
+                    )}
                   </div>
                 </div>
 
