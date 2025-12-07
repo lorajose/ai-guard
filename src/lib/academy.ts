@@ -10,6 +10,20 @@ const openai = new OpenAI({
 });
 const ACADEMY_MODEL = "gpt-4o-mini";
 
+function extractJsonText(completion: OpenAI.Beta.Responses.Response) {
+  const block = completion.output?.find((item) =>
+    item.content?.some((content) => content.type === "output_text")
+  );
+  const contentBlock = block?.content?.find(
+    (content) => content.type === "output_text"
+  );
+  return (
+    (contentBlock && "text" in contentBlock ? contentBlock.text : null) ||
+    completion.output_text?.[0] ||
+    null
+  );
+}
+
 export async function generarSimulacionPhishing({
   marca,
   escenario,
@@ -32,9 +46,7 @@ export async function generarSimulacionPhishing({
     response_format: { type: "json_object" },
   });
 
-  const payload = completion.output?.[0]?.content?.[0];
-  const jsonText =
-    payload && payload.type === "output_text" ? payload.text : null;
+  const jsonText = extractJsonText(completion);
 
   if (!jsonText) {
     throw new Error("OpenAI response did not include JSON payload");
@@ -65,9 +77,7 @@ export async function generarLeccionTeorica({
     response_format: { type: "json_object" },
   });
 
-  const payload = completion.output?.[0]?.content?.[0];
-  const jsonText =
-    payload && payload.type === "output_text" ? payload.text : null;
+  const jsonText = extractJsonText(completion);
 
   if (!jsonText) {
     throw new Error("OpenAI response did not include JSON payload");
