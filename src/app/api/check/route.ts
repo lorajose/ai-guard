@@ -1,4 +1,8 @@
+import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import { createServerClient } from "@supabase/ssr";
+import { createHash } from "crypto";
 import OpenAI from "openai";
+import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
 
 const MODEL = "gpt-4o-mini";
@@ -110,6 +114,16 @@ export async function POST(request: NextRequest) {
       new Set([...heuristicResult.reasons, ...aiPayload.razones])
     );
 
+    await persistCheck({
+      text,
+      source,
+      label: finalLabel,
+      score: finalScore,
+      reasons: finalReasons,
+      advice: aiPayload.consejo_breve,
+      heuristicReasons: heuristicResult.reasons,
+    });
+
     return NextResponse.json({
       label: finalLabel,
       score: finalScore,
@@ -177,6 +191,68 @@ Devuelve JSON: { label, score(0-100), razones[], consejo_breve }.
 Señales: urgencia, pagos inmediatos, familiares en peligro, premios, cripto, links acortados.
 Fuente: ${source ?? "desconocida"}
 Mensaje: """${text}"""`;
+}
+
+async function persistCheck({
+  text,
+  source,
+  label,
+  score,
+  reasons,
+  advice,
+  heuristicReasons,
+}: {
+  text: string;
+  source?: string;
+  label: string;
+  score: number;
+  reasons: string[];
+  advice: string;
+  heuristicReasons: string[];
+}) {
+  try {
+    const cookieStore = await cookies();
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        cookies: {
+          get(name) {
+            return cookieStore.get(name)?.value;
+          },
+          set(name, value, options) {
+            cookieStore.set({ name, value, ...options });
+          },
+          remove(name, options) {
+            cookieStore.delete({ name, ...options });
+          },
+        },
+      }
+    );
+
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) return;
+
+    const contentHash = createHash("sha256").update(text).digest("hex");
+    await supabaseAdmin.from("checks").insert({
+      user_id: user.id,
+      source: source ?? "web",
+      content_hash: contentHash,
+      label,
+      score,
+      reasons,
+      advice,
+      text,
+      metadata: {
+        source,
+        heuristicReasons,
+      },
+    });
+  } catch (error) {
+    console.error("Failed to persist check:", error);
+  }
 }
 
 export function parseAIResponse(response: any) {
