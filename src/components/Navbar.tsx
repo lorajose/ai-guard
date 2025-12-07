@@ -3,6 +3,7 @@
 import dynamic from "next/dynamic";
 import { useAuth } from "@/contexts/AuthContext";
 import Image from "next/image";
+import Link from "next/link";
 import { useState } from "react";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { useLocale } from "@/contexts/LocaleProvider";
@@ -87,15 +88,15 @@ export default function Navbar() {
 
       {/* Links */}
       <div className="hidden md:flex items-center gap-6 text-sm text-zinc-300">
-        <a href="/dashboard" className="hover:text-white transition">
+        <Link href="/dashboard" className="hover:text-white transition">
           {navbarCopy.private.dashboard}
-        </a>
-        <a href="/pricing" className="hover:text-white transition">
+        </Link>
+        <Link href="/pricing" className="hover:text-white transition">
           {navbarCopy.private.pricing}
-        </a>
-        <a href="/support" className="hover:text-white transition">
+        </Link>
+        <Link href="/support" className="hover:text-white transition">
           {navbarCopy.private.support}
-        </a>
+        </Link>
       </div>
 
       {/* Menú del usuario */}
@@ -121,18 +122,18 @@ export default function Navbar() {
 
         {menuOpen && (
           <div className="absolute right-0 mt-2 w-48 bg-zinc-800 rounded-lg border border-zinc-700 shadow-xl overflow-hidden">
-            <a
+            <Link
               href="/account"
               className="block px-4 py-2 text-sm hover:bg-zinc-700"
             >
               ⚙️ {navbarCopy.account.account}
-            </a>
-            <a
+            </Link>
+            <Link
               href="/change-password"
               className="block px-4 py-2 text-sm hover:bg-zinc-700"
             >
               🔑 {navbarCopy.account.password}
-            </a>
+            </Link>
             <button
               onClick={handleLogout}
               className="w-full text-left px-4 py-2 text-sm text-red-400 hover:bg-zinc-700"

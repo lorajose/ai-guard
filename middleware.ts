@@ -48,6 +48,7 @@ export async function middleware(req: NextRequest) {
   const needsPro = PRO_FEATURE_ROUTES.some((prefix) =>
     pathname.startsWith(prefix)
   );
+  const allowAuthRoute = req.nextUrl.searchParams.get("guest") === "1";
 
   if (!isAuthenticated && isProtected) {
     const redirectUrl = new URL("/login", req.url);
@@ -55,7 +56,7 @@ export async function middleware(req: NextRequest) {
     return NextResponse.redirect(redirectUrl);
   }
 
-  if (isAuthenticated && isAuthRoute) {
+  if (isAuthenticated && isAuthRoute && !allowAuthRoute) {
     return NextResponse.redirect(new URL("/dashboard", req.url));
   }
 

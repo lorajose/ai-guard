@@ -4,7 +4,10 @@ import ShinyButton from "@/components/ShinyButton";
 import { useLocale } from "@/contexts/LocaleProvider";
 import { messages } from "@/i18n/messages";
 import { motion } from "framer-motion";
+import dynamic from "next/dynamic";
 import { useState } from "react";
+
+const DemoModal = dynamic(() => import("./modals/DemoModal"));
 
 const heroVariants = {
   hidden: { opacity: 0, y: 30 },
@@ -14,7 +17,6 @@ const heroVariants = {
 export default function Hero() {
   const { locale } = useLocale();
   const heroCopy = messages[locale].hero;
-  const [videoOpen, setVideoOpen] = useState(false);
 
   return (
     <section
@@ -66,64 +68,37 @@ export default function Hero() {
             {heroCopy.subtitle}
           </motion.p>
 
-          <motion.div
-            className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row"
-            variants={heroVariants}
-            transition={{ delay: 0.4, duration: 0.7 }}
-          >
-            <ShinyButton href="/register">{heroCopy.primaryCta}</ShinyButton>
-            <button
-              onClick={() => setVideoOpen(true)}
-              className="w-full rounded-xl border border-white/30 bg-white/10 px-6 py-3 text-sm font-semibold text-white backdrop-blur-md transition hover:border-white/60 hover:bg-white/20 sm:w-auto"
-            >
-              {heroCopy.secondaryCta}
-            </button>
-          </motion.div>
+          <HeroActions copy={heroCopy} />
         </motion.div>
       </div>
-
-      {videoOpen && <DemoModal label={heroCopy.demoLabel} onClose={() => setVideoOpen(false)} />}
     </section>
   );
 }
 
-function DemoModal({
-  label,
-  onClose,
+function HeroActions({
+  copy,
 }: {
-  label: string;
-  onClose: () => void;
+  copy: (typeof messages)["en"]["hero"];
 }) {
+  const [videoOpen, setVideoOpen] = useState(false);
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 px-4"
-      onClick={onClose}
-    >
-      <div
-        className="relative w-full max-w-3xl overflow-hidden rounded-3xl border border-white/10 bg-black/90"
-        onClick={(event) => event.stopPropagation()}
+    <>
+      <motion.div
+        className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row"
+        variants={heroVariants}
+        transition={{ delay: 0.4, duration: 0.7 }}
       >
+        <ShinyButton href="/register">{copy.primaryCta}</ShinyButton>
         <button
-          onClick={onClose}
-          className="absolute right-3 top-3 text-sm text-zinc-400 transition hover:text-white"
+          onClick={() => setVideoOpen(true)}
+          className="w-full rounded-xl border border-white/30 bg-white/10 px-6 py-3 text-sm font-semibold text-white backdrop-blur-md transition hover:border-white/60 hover:bg-white/20 sm:w-auto"
         >
-          ✕
+          {copy.secondaryCta}
         </button>
-        <div className="aspect-video w-full bg-black/60">
-          <video
-            className="h-full w-full object-cover"
-            src="/videos/A_cinematic_AI_Guard.mp4"
-            controls
-            autoPlay
-            muted
-            loop
-            playsInline
-          >
-            {label}
-          </video>
-        </div>
-        <div className="p-4 text-center text-sm text-zinc-400">{label}</div>
-      </div>
-    </div>
+      </motion.div>
+      {videoOpen && (
+        <DemoModal label={copy.demoLabel} onClose={() => setVideoOpen(false)} />
+      )}
+    </>
   );
 }
