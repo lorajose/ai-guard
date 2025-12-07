@@ -59,6 +59,10 @@ export default function DashboardPage() {
   const [simulation, setSimulation] = useState<any | null>(null);
   const [simulationLoading, setSimulationLoading] = useState(false);
   const [simulationError, setSimulationError] = useState<string | null>(null);
+  const [lessonData, setLessonData] = useState<any | null>(null);
+  const [lessonLoading, setLessonLoading] = useState(false);
+  const [lessonError, setLessonError] = useState<string | null>(null);
+  const [lessonOpen, setLessonOpen] = useState(false);
   const normalizedPlan = planBadge?.plan?.toLowerCase() ?? "free";
   const planStatus = planBadge?.status ?? "inactive";
   const isFreeTier = normalizedPlan === "free";
@@ -76,6 +80,17 @@ export default function DashboardPage() {
       return academyCopy.levels.basic;
     return academyCopy.levels.free;
   }, [academyCopy.levels, normalizedPlan]);
+
+  const academyLessonLevel = useMemo(() => {
+    if (normalizedPlan.includes("enterprise")) return "Avanzado";
+    if (
+      normalizedPlan.includes("business") ||
+      normalizedPlan.includes("pro")
+    ) {
+      return "Intermedio";
+    }
+    return "Básico";
+  }, [normalizedPlan]);
 
   const unlockedModuleIds = useMemo(() => {
     const base = isFreeTier ? modules.slice(0, 1) : modules;
@@ -142,6 +157,38 @@ export default function DashboardPage() {
       setSimulationLoading(false);
     }
   }, [academyCopy.actions.error, canAccessAcademy]);
+
+  const handleOpenLessonCard = useCallback(async () => {
+    if (!canAccessAcademy) return;
+    setLessonError(null);
+    setLessonLoading(true);
+    try {
+      const response = await fetch("/api/academy/lesson", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: activeModule?.title ?? "Phishing fundamentals",
+          level: academyLessonLevel,
+        }),
+      });
+      if (!response.ok) {
+        throw new Error("Failed lesson request");
+      }
+      const payload = await response.json();
+      setLessonData(payload);
+      setLessonOpen(true);
+    } catch (error) {
+      console.error(error);
+      setLessonError(academyCopy.actions.error);
+    } finally {
+      setLessonLoading(false);
+    }
+  }, [
+    academyCopy.actions.error,
+    academyLessonLevel,
+    activeModule?.title,
+    canAccessAcademy,
+  ]);
 
   useEffect(() => {
     async function fetchUser() {
@@ -432,10 +479,19 @@ export default function DashboardPage() {
                           {activeModule?.summary}
                         </p>
                       </div>
-                      <button className="rounded-full border border-white/20 px-4 py-2 text-sm font-semibold text-white transition hover:border-white/40">
-                        {academyCopy.actions.startLesson}
+                      <button
+                        onClick={handleOpenLessonCard}
+                        disabled={lessonLoading || !canAccessAcademy}
+                        className="rounded-full border border-white/20 px-4 py-2 text-sm font-semibold text-white transition hover:border-white/40 disabled:opacity-60"
+                      >
+                        {lessonLoading
+                          ? academyCopy.actions.generating
+                          : academyCopy.actions.startLesson}
                       </button>
                     </div>
+                    {lessonError && (
+                      <p className="mt-3 text-sm text-red-300">{lessonError}</p>
+                    )}
                     <div className="mt-4 flex flex-wrap gap-2">
                       {modules.map((module) => {
                         const unlocked = unlockedModuleIds.has(module.id);
@@ -638,6 +694,11 @@ export default function DashboardPage() {
         onClose={() => setSelectedCheck(null)}
         copy={dashboardCopy.table}
         locale={locale}
+      />
+      <LessonModal
+        lesson={lessonData}
+        isOpen={lessonOpen}
+        onClose={() => setLessonOpen(false)}
       />
     </div>
   );
@@ -954,6 +1015,129 @@ function DetailsModal({
               <p>
                 {copy.updated}: {formatDate(check.created_at, locale, true)}
               </p>
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+}
+
+function LessonModal({
+  lesson,
+  isOpen,
+  onClose,
+}: {
+  lesson: any | null;
+  isOpen: boolean;
+  onClose: () => void;
+}) {
+  return (
+    <AnimatePresence>
+      {lesson && isOpen && (
+        <motion.div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 px-4 py-10"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+        >
+          <motion.div
+            initial={{ scale: 0.95, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0.95, opacity: 0 }}
+            className="relative w-full max-w-3xl rounded-3xl border border-white/10 bg-zinc-950 p-6"
+          >
+            <button
+              onClick={onClose}
+              className="absolute right-4 top-4 text-sm text-zinc-500 hover:text-white"
+            >
+              ✕
+            </button>
+            <div className="space-y-4">
+              <div>
+                <p className="text-xs uppercase tracking-[0.4em] text-zinc-500">
+                  {lesson.tipo === "lesson" ? "IA Academy · Lesson" : "IA Academy"}
+                </p>
+                <h3 className="text-2xl font-semibold text-white">
+                  {lesson.titulo}
+                </h3>
+                {lesson.resumen && (
+                  <p className="mt-2 text-sm text-zinc-400">{lesson.resumen}</p>
+                )}
+              </div>
+              <div className="space-y-4">
+                {lesson.secciones?.map(
+                  (section: { subtitulo: string; contenido_html: string }, index: number) => (
+                    <div
+                      key={`lesson-section-${index}`}
+                      className="rounded-2xl border border-white/10 bg-black/40 p-4"
+                    >
+                      <h4 className="text-lg font-semibold text-white">
+                        {section.subtitulo}
+                      </h4>
+                      <div
+                        className="mt-2 text-sm text-zinc-200 space-y-2"
+                        dangerouslySetInnerHTML={{
+                          __html: section.contenido_html,
+                        }}
+                      />
+                    </div>
+                  )
+                )}
+              </div>
+              {lesson.mini_quiz && lesson.mini_quiz.length > 0 && (
+                <div className="rounded-2xl border border-white/10 bg-black/40 p-4">
+                  <p className="text-xs uppercase tracking-wide text-zinc-500">
+                    Quiz
+                  </p>
+                  <div className="mt-3 space-y-4 text-sm text-zinc-200">
+                    {lesson.mini_quiz.map(
+                      (
+                        quiz: {
+                          pregunta: string;
+                          opciones: string[];
+                          respuesta_correcta: string;
+                          explicacion: string;
+                        },
+                        index: number
+                      ) => (
+                        <div key={`lesson-quiz-${index}`} className="space-y-2">
+                          <p className="font-semibold">{quiz.pregunta}</p>
+                          <ul className="space-y-1">
+                            {quiz.opciones.map((option, optionIndex) => (
+                              <li
+                                key={`${option}-${optionIndex}`}
+                                className={`rounded-full border px-3 py-1 text-xs ${
+                                  option === quiz.respuesta_correcta
+                                    ? "border-neonGreen text-neonGreen"
+                                    : "border-white/10 text-zinc-300"
+                                }`}
+                              >
+                                {option}
+                              </li>
+                            ))}
+                          </ul>
+                          <p className="text-xs text-zinc-500">
+                            {quiz.explicacion}
+                          </p>
+                        </div>
+                      )
+                    )}
+                  </div>
+                </div>
+              )}
+              {lesson.checklist_final && (
+                <div className="rounded-2xl border border-white/10 bg-black/40 p-4">
+                  <p className="text-xs uppercase tracking-wide text-zinc-500">
+                    Checklist
+                  </p>
+                  <ul className="mt-3 list-disc space-y-1 pl-5 text-sm text-zinc-200">
+                    {lesson.checklist_final.map((item: string, index: number) => (
+                      <li key={`lesson-check-${index}`}>{item}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
             </div>
           </motion.div>
         </motion.div>
