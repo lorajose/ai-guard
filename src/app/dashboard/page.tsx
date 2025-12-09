@@ -237,7 +237,7 @@ export default function DashboardPage() {
       const { data, error } = await query;
       if (!isMounted) return;
       if (error) {
-        console.error("Error fetching checks:", error.message);
+        console.error("Error fetching checks:", error);
       } else if (data) {
         setChecks((prev) =>
           page === 0 ? (data as CheckRecord[]) : [...prev, ...(data as CheckRecord[])]
