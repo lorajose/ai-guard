@@ -36,6 +36,12 @@ export default function DashboardPage() {
     process.env.NEXT_PUBLIC_SUPERADMIN_ID ||
     "a3f88c37-c06f-49b6-9396-6e8e748fae54";
   const { locale } = useLocale();
+  useEffect(() => {
+    console.log("[Dashboard] userId", userId);
+  }, [userId]);
+  useEffect(() => {
+    console.log("[Dashboard] checks length", checks.length, checks);
+  }, [checks]);
   const dashboardCopy = messages[locale].dashboard;
   const filterOptions: { value: FilterOption; label: string }[] = [
     { value: "ALL", label: dashboardCopy.filters.all },
