@@ -223,7 +223,7 @@ export default function DashboardPage() {
       setLoadingChecks(true);
       const { data, error } = await supabase
         .from("checks")
-        .select("id,created_at,source,label,score,text,metadata")
+        .select("id,created_at,source,label,score,text")
         .eq("user_id", userId)
         .order("created_at", { ascending: false })
         .range(page * PAGE_SIZE, page * PAGE_SIZE + PAGE_SIZE - 1);
@@ -710,7 +710,7 @@ const Sidebar = memo(function Sidebar({
   copy: DashboardCopy["sidebar"];
 }) {
   return (
-    <aside className="border-b border-white/10 bg-black/30 px-6 py-6 backdrop-blur md:px-8 lg:min-h-screen lg:w-72 lg:border-r">
+    <aside className="border-b border-white/10 bg-black/30 px-6 pt-20 pb-6 backdrop-blur md:px-8 md:pt-12 lg:min-h-screen lg:w-72 lg:border-r lg:pt-8">
       <div className="flex items-center gap-3">
         <div className="h-10 w-10 rounded-2xl bg-neonGreen/10 text-neonGreen flex items-center justify-center font-black">
           IA
