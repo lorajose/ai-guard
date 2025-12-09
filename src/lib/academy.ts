@@ -58,27 +58,33 @@ export async function generarSimulacionPhishing({
   escenario: string;
 }) {
   if (!openai.apiKey) {
-    throw new Error("OPENAI_API_KEY is not configured");
+    console.warn("OPENAI_API_KEY missing. Returning fallback simulation.");
+    return fallbackSimulation(marca, escenario);
   }
 
   const userPrompt = IA_ACADEMY_PHISH_SIM_PROMPT(marca, escenario);
 
-  const completion = await openai.responses.create({
-    model: ACADEMY_MODEL,
-    input: [
-      { role: "system", content: IA_ACADEMY_SYSTEM_PROMPT },
-      { role: "user", content: userPrompt },
-    ],
-    response_format: { type: "json_object" },
-  });
+  try {
+    const completion = await openai.responses.create({
+      model: ACADEMY_MODEL,
+      input: [
+        { role: "system", content: IA_ACADEMY_SYSTEM_PROMPT },
+        { role: "user", content: userPrompt },
+      ],
+      response_format: { type: "json_object" },
+    });
 
-  const jsonText = extractJsonText(completion);
+    const jsonText = extractJsonText(completion);
 
-  if (!jsonText) {
-    throw new Error("OpenAI response did not include JSON payload");
+    if (!jsonText) {
+      throw new Error("OpenAI response did not include JSON payload");
+    }
+
+    return JSON.parse(jsonText);
+  } catch (error) {
+    console.error("Error generating phishing simulation:", error);
+    return fallbackSimulation(marca, escenario);
   }
-
-  return JSON.parse(jsonText);
 }
 
 export async function generarLeccionTeorica({
@@ -157,5 +163,32 @@ function fallbackLesson(titulo: string, nivel: string) {
       "Consulta dominios y enlaces en un visor seguro antes de abrirlos.",
       "Escala mensajes dudosos al equipo de seguridad o IA Shield para análisis.",
     ],
+  };
+}
+
+function fallbackSimulation(marca: string, escenario: string) {
+  return {
+    tipo: "phish_simulation",
+    subject: `[${marca}] Acción requerida inmediatamente`,
+    from_name: `${marca} Alerts`,
+    from_email: `alertas@${marca.toLowerCase()}-secure-review.com`,
+    body_text: `Hola,
+
+Recibimos un reporte de actividad inusual en tu ${marca}. Para evitar el cierre automático, verifica tu información antes de las próximas 2 horas:
+
+https://${marca.toLowerCase()}-secure-checkup.support-account.com
+
+Si no completas la revisión hoy, bloquearemos los pagos y transferencias asociados.
+
+Equipo de Seguridad`,
+    body_html:
+      "<p>Hola,</p><p>Detectamos actividad inusual en tu cuenta. Para evitar el cierre, <strong>verifica tus datos</strong> antes de 2 horas:</p><p><a href='https://secure-review-login-account.com'>https://secure-review-login-account.com</a></p><p>De lo contrario bloquearemos temporalmente tus pagos.</p><p>Equipo de Seguridad</p>",
+    indicadores_riesgo: [
+      "URL sospechosa: secure-review-login-account.com no pertenece a la marca.",
+      "Urgencia artificial: amenaza de bloqueo en 2 horas.",
+      "Suplantación de marca: remitente falso que imita notificaciones oficiales.",
+    ],
+    nivel_estimado: "Básico",
+    xp_base: 40,
   };
 }
