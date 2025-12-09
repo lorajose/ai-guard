@@ -388,8 +388,8 @@ export default function DashboardPage() {
     <div className="min-h-screen bg-gradient-to-br from-black via-cyberBlue to-black text-white">
       <div className="flex flex-col lg:flex-row">
         <Sidebar copy={dashboardCopy.sidebar} />
-        <main className="flex-1 px-6 py-10 lg:px-10">
-          <header className="flex flex-col gap-3">
+        <main className="flex-1 px-6 pt-16 pb-10 lg:px-10 lg:pt-12">
+          <header className="mt-4 flex flex-col gap-3">
             <p className="text-sm text-zinc-400">{dashboardCopy.welcome}</p>
             <h1 className="text-3xl font-semibold">{dashboardCopy.title}</h1>
             {planBadge && (
@@ -1014,7 +1014,7 @@ function DetailsModal({
                 </p>
                 <p>
                   <span className="text-zinc-500">{copy.label}:</span>{" "}
-                  <LabelBadge label={check.label} />
+                  <DashboardLabelBadge label={check.label} />
                 </p>
                 <p>
                   <span className="text-zinc-500">{copy.score}:</span>{" "}
