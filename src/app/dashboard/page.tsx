@@ -53,6 +53,7 @@ export default function DashboardPage() {
   const [selectedFilter, setSelectedFilter] = useState<FilterOption>("ALL");
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCheck, setSelectedCheck] = useState<CheckRecord | null>(null);
+  const [checksError, setChecksError] = useState<string | null>(null);
   const [planBadge, setPlanBadge] = useState<PlanBadge | null>(null);
   const academyCopy = dashboardCopy.academy;
   const modules = academyCopy.modules || [];
@@ -224,6 +225,7 @@ export default function DashboardPage() {
 
     async function loadChecks() {
       setLoadingChecks(true);
+      setChecksError(null);
       let query = supabase
         .from("checks")
         .select("id,created_at,source,label,score,text")
@@ -236,8 +238,10 @@ export default function DashboardPage() {
 
       const { data, error } = await query;
       if (!isMounted) return;
+      console.log("[Dashboard] loadChecks result", { data, error });
       if (error) {
         console.error("Error fetching checks:", error);
+        setChecksError(error.message || "Unknown Supabase error");
       } else if (data) {
         setChecks((prev) =>
           page === 0 ? (data as CheckRecord[]) : [...prev, ...(data as CheckRecord[])]
@@ -304,7 +308,7 @@ export default function DashboardPage() {
     setPage((prev) => prev + 1);
   }, [hasMore, loadingChecks]);
 
-  const shouldVirtualize = filteredChecks.length > 20;
+  const shouldVirtualize = filteredChecks.length > 80;
   const listHeight =
     Math.max(Math.min(filteredChecks.length, 8), 1) * ROW_HEIGHT;
 
@@ -408,6 +412,12 @@ export default function DashboardPage() {
               />
             ))}
           </section>
+
+          {checksError && (
+            <div className="mt-4 rounded-2xl border border-red-500/40 bg-red-500/10 p-4 text-sm text-red-200">
+              {checksError}
+            </div>
+          )}
 
           <section className="mt-10 rounded-[32px] border border-white/10 bg-gradient-to-br from-zinc-950 via-black to-cyberBlue/10 p-6 shadow-[0_30px_80px_rgba(0,0,0,0.4)]">
             <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
