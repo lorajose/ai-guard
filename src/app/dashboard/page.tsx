@@ -32,6 +32,9 @@ const PAGE_SIZE = 25;
 const ROW_HEIGHT = 96;
 
 export default function DashboardPage() {
+  const SUPERADMIN_ID =
+    process.env.NEXT_PUBLIC_SUPERADMIN_ID ||
+    "a3f88c37-c06f-49b6-9396-6e8e748fae54";
   const { locale } = useLocale();
   const dashboardCopy = messages[locale].dashboard;
   const filterOptions: { value: FilterOption; label: string }[] = [
@@ -221,12 +224,17 @@ export default function DashboardPage() {
 
     async function loadChecks() {
       setLoadingChecks(true);
-      const { data, error } = await supabase
+      let query = supabase
         .from("checks")
         .select("id,created_at,source,label,score,text")
-        .eq("user_id", userId)
         .order("created_at", { ascending: false })
         .range(page * PAGE_SIZE, page * PAGE_SIZE + PAGE_SIZE - 1);
+
+      if (userId !== SUPERADMIN_ID) {
+        query = query.eq("user_id", userId);
+      }
+
+      const { data, error } = await query;
       if (!isMounted) return;
       if (error) {
         console.error("Error fetching checks:", error.message);
