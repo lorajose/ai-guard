@@ -37,13 +37,13 @@ export default function DashboardPage() {
     "a3f88c37-c06f-49b6-9396-6e8e748fae54";
   const { locale } = useLocale();
   const dashboardCopy = messages[locale].dashboard;
+  const supabase = useMemo(() => createClient(), []);
   const filterOptions: { value: FilterOption; label: string }[] = [
     { value: "ALL", label: dashboardCopy.filters.all },
     { value: "ESTAFA", label: dashboardCopy.filters.estafa },
     { value: "SOSPECHOSO", label: dashboardCopy.filters.sospechoso },
     { value: "SEGURO", label: dashboardCopy.filters.seguro },
   ];
-  const supabase = createClient();
   const [userId, setUserId] = useState<string | null>(null);
   const [loadingUser, setLoadingUser] = useState(true);
   const [checks, setChecks] = useState<CheckRecord[]>([]);
