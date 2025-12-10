@@ -573,7 +573,6 @@ const shouldVirtualize = filteredChecks.length > 80;
                 </div>
               </section>
             </>
-            </>
           ) : (
               <section className="mt-8 rounded-[32px] border border-white/10 bg-gradient-to-br from-zinc-950 via-black to-cyberBlue/10 p-6 shadow-[0_30px_80px_rgba(0,0,0,0.4)]">
                 <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
