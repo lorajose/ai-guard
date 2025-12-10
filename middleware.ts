@@ -6,6 +6,7 @@ import { NextResponse } from "next/server";
 const PROTECTED_PREFIXES = ["/dashboard"];
 const AUTH_ROUTES = ["/login", "/signup"];
 const PRO_FEATURE_ROUTES = ["/agentguard", "/shield"];
+const ACTIVE_STATUSES = new Set(["active", "trialing", "past_due"]);
 
 export async function middleware(req: NextRequest) {
   const res = NextResponse.next();
@@ -50,6 +51,14 @@ export async function middleware(req: NextRequest) {
   );
   const allowAuthRoute = req.nextUrl.searchParams.get("guest") === "1";
 
+  let planInfo: Awaited<ReturnType<typeof checkUserPlan>> | null = null;
+  async function ensurePlanInfo() {
+    if (!planInfo && userId) {
+      planInfo = await checkUserPlan(userId);
+    }
+    return planInfo;
+  }
+
   if (!isAuthenticated && isProtected) {
     const redirectUrl = new URL("/login", req.url);
     redirectUrl.searchParams.set("redirectTo", pathname);
@@ -60,9 +69,18 @@ export async function middleware(req: NextRequest) {
     return NextResponse.redirect(new URL("/dashboard", req.url));
   }
 
+  if (
+    isAuthenticated &&
+    userId &&
+    ACTIVE_STATUSES.has(((await ensurePlanInfo())?.status ?? "").toLowerCase()) &&
+    pathname === "/"
+  ) {
+    return NextResponse.redirect(new URL("/dashboard", req.url));
+  }
+
   if (isAuthenticated && needsPro && userId && !isSuperAdmin) {
-    const planInfo = await checkUserPlan(userId);
-    if (!planInfo.isPro) {
+    const planData = await ensurePlanInfo();
+    if (!planData?.isPro) {
       const upgrade = new URL("/pricing", req.url);
       upgrade.searchParams.set("upgrade", "pro");
       return NextResponse.redirect(upgrade);
@@ -73,5 +91,5 @@ export async function middleware(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/dashboard/:path*", "/login", "/signup", "/agentguard/:path*", "/shield/:path*"],
+  matcher: ["/", "/dashboard/:path*", "/login", "/signup", "/agentguard/:path*", "/shield/:path*"],
 };
