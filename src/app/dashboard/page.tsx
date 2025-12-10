@@ -961,6 +961,7 @@ const Sidebar = memo(function Sidebar({
           { label: copy.nav.dashboard, href: "/dashboard" },
           { label: copy.nav.history, href: "/dashboard/history" },
           { label: copy.nav.settings, href: "/dashboard/settings" },
+          { label: "ViajaRD", href: "/dashboard/viajard" },
           { label: copy.nav.logout, href: "/logout" },
         ].map((item) => (
           <a
