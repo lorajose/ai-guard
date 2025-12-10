@@ -615,37 +615,9 @@ const shouldVirtualize = filteredChecks.length > 80;
                         </div>
                       </div>
 
-                      <div className="rounded-3xl border border-white/10 bg-black/30 p-5">
-                        <div className="flex flex-wrap items-center justify-between gap-3">
-                          <div>
-                            <p className="text-xs uppercase tracking-wide text-zinc-500">
-                              {activeModule?.tag}
-                            </p>
-                            <h3 className="text-xl font-semibold">
-                              {activeModule?.title}
-                            </h3>
-                            <p className="mt-2 text-sm text-zinc-400">
-                              {activeModule?.summary}
-                            </p>
-                          </div>
-                          <button
-                            onClick={handleOpenLessonCard}
-                            disabled={lessonLoading || !canAccessAcademy}
-                            className="rounded-full border border-white/20 px-4 py-2 text-sm font-semibold text-white transition hover:border-white/40 disabled:opacity-60"
-                          >
-                            {lessonLoading
-                              ? academyCopy.actions.generating
-                              : academyCopy.actions.startLesson}
-                          </button>
-                        </div>
 
-          {checksError && (
-            <div className="mt-4 rounded-2xl border border-red-500/40 bg-red-500/10 p-4 text-sm text-red-200">
-              {checksError}
-            </div>
-          )}
-
-          <section className="mt-10 rounded-[32px] border border-white/10 bg-gradient-to-br from-zinc-950 via-black to-cyberBlue/10 p-6 shadow-[0_30px_80px_rgba(0,0,0,0.4)]">
+          {activeTab === "academy" && (
+            <section className="mt-10 rounded-[32px] border border-white/10 bg-gradient-to-br from-zinc-950 via-black to-cyberBlue/10 p-6 shadow-[0_30px_80px_rgba(0,0,0,0.4)]">
             <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
               <div>
                 <p className="text-xs uppercase tracking-[0.4em] text-zinc-500">
@@ -1077,8 +1049,10 @@ const shouldVirtualize = filteredChecks.length > 80;
                   </button>
                 </div>
               )}
-            </div>
-          </section>
+              </div>
+            </section>
+          )}
+          )}
         </main>
       </div>
       <DetailsModal
