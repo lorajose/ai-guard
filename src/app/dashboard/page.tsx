@@ -68,6 +68,7 @@ export default function DashboardPage() {
   const [lessonLoading, setLessonLoading] = useState(false);
   const [lessonError, setLessonError] = useState<string | null>(null);
   const [lessonOpen, setLessonOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState<"overview" | "academy">("overview");
   const [activeLessonId, setActiveLessonId] = useState(
     levelOneLessons[0]?.id ?? "lesson-phishing-core"
   );
@@ -362,7 +363,7 @@ export default function DashboardPage() {
     setPage((prev) => prev + 1);
   }, [hasMore, loadingChecks]);
 
-  const shouldVirtualize = filteredChecks.length > 80;
+const shouldVirtualize = filteredChecks.length > 80;
   const listHeight =
     Math.max(Math.min(filteredChecks.length, 8), 1) * ROW_HEIGHT;
 
@@ -454,26 +455,128 @@ export default function DashboardPage() {
                 </span>
               </span>
             )}
+            <div className="mt-2 flex flex-wrap gap-2">
+              {[
+                { id: "overview", label: "Dashboard" },
+                { id: "academy", label: "IA Academy" },
+              ].map((tab) => (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id as "overview" | "academy")}
+                  className={`rounded-full border px-4 py-1 text-sm transition ${
+                    activeTab === tab.id
+                      ? "border-neonGreen bg-neonGreen text-black"
+                      : "border-white/10 text-zinc-300 hover:border-white/30"
+                  }`}
+                >
+                  {tab.label}
+                </button>
+              ))}
+            </div>
           </header>
 
-          <section className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {stats.map((stat) => (
-              <StatCard
-                key={stat.label}
-                label={stat.label}
-                value={stat.value}
-                loading={loadingChecks}
-              />
-            ))}
-          </section>
+          {activeTab === "overview" && (
+            <>
+              <section className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                {stats.map((stat) => (
+                  <StatCard
+                    key={stat.label}
+                    label={stat.label}
+                    value={stat.value}
+                    loading={loadingChecks}
+                  />
+                ))}
+              </section>
+              {checksError && (
+                <div className="mt-4 rounded-2xl border border-red-500/40 bg-red-500/10 p-4 text-sm text-red-200">
+                  {checksError}
+                </div>
+              )}
+              <section className="mt-10 rounded-3xl border border-white/5 bg-white/5 p-6 backdrop-blur-xl">
+                <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                  <div className="flex flex-wrap gap-2">
+                    {filterOptions.map((option) => (
+                      <button
+                        key={option.value}
+                        onClick={() => setSelectedFilter(option.value)}
+                        className={`rounded-full px-4 py-1 text-sm transition ${
+                          selectedFilter === option.value
+                            ? "bg-neonGreen text-black"
+                            : "bg-white/5 text-zinc-300 hover:bg-white/10"
+                        }`}
+                      >
+                        {option.label}
+                      </button>
+                    ))}
+                  </div>
+                  <div className="relative w-full md:w-72">
+                    <input
+                      value={searchTerm}
+                      onChange={(event) => setSearchTerm(event.target.value)}
+                      placeholder={dashboardCopy.searchPlaceholder}
+                      className="w-full rounded-2xl border border-white/10 bg-black/40 px-4 py-2 text-sm outline-none placeholder:text-zinc-500"
+                    />
+                    <span className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-xs text-zinc-500">
+                      ⌕
+                    </span>
+                  </div>
+                </div>
 
-          {checksError && (
-            <div className="mt-4 rounded-2xl border border-red-500/40 bg-red-500/10 p-4 text-sm text-red-200">
-              {checksError}
-            </div>
+                <div className="mt-6 overflow-hidden rounded-2xl border border-white/5">
+                  <div className="hidden grid-cols-[140px_1fr_150px_200px_120px] bg-white/5 px-6 py-3 text-left text-xs uppercase tracking-wide text-zinc-400 md:grid">
+                    <span>{dashboardCopy.table.date}</span>
+                    <span>{dashboardCopy.table.source}</span>
+                    <span>{dashboardCopy.table.label}</span>
+                    <span>{dashboardCopy.table.score}</span>
+                    <span>{dashboardCopy.table.actions}</span>
+                  </div>
+                  {loadingChecks ? (
+                    <SkeletonRows />
+                  ) : filteredChecks.length === 0 ? (
+                    <EmptyState copy={dashboardCopy.empty} />
+                  ) : shouldVirtualize ? (
+                    <VirtualizedCheckList
+                      items={filteredChecks}
+                      locale={locale}
+                      copy={dashboardCopy.table}
+                      onRowClick={handleRowClick}
+                      height={listHeight}
+                    />
+                  ) : (
+                    <div className="divide-y divide-white/5">
+                      {filteredChecks.map((check) => (
+                        <CheckRowItem
+                          key={check.id}
+                          check={check}
+                          locale={locale}
+                          copy={dashboardCopy.table}
+                          onRowClick={handleRowClick}
+                        />
+                      ))}
+                    </div>
+                  )}
+                  {filteredChecks.length > 0 && (
+                    <div className="border-t border-white/5 bg-black/20 px-4 py-4 text-center">
+                      <button
+                        onClick={loadMore}
+                        disabled={loadingChecks || !hasMore}
+                        className="rounded-full border border-white/20 px-6 py-2 text-sm font-semibold text-white transition hover:border-white/40 disabled:opacity-50"
+                      >
+                        {loadingChecks
+                          ? "Loading..."
+                          : hasMore
+                          ? "Load more"
+                          : "No more results"}
+                      </button>
+                    </div>
+                  )}
+                </div>
+
+              </section>
+            </>
           )}
-
-          <section className="mt-10 rounded-[32px] border border-white/10 bg-gradient-to-br from-zinc-950 via-black to-cyberBlue/10 p-6 shadow-[0_30px_80px_rgba(0,0,0,0.4)]">
+          {activeTab === "academy" && (
+            <section className="mt-10 rounded-[32px] border border-white/10 bg-gradient-to-br from-zinc-950 via-black to-cyberBlue/10 p-6 shadow-[0_30px_80px_rgba(0,0,0,0.4)]">
             <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
               <div>
                 <p className="text-xs uppercase tracking-[0.4em] text-zinc-500">
@@ -624,22 +727,33 @@ export default function DashboardPage() {
                     </div>
                   </div>
                   <div className="mt-4 flex flex-wrap gap-2">
-                    {levelOneLessons.map((lesson) => (
-                      <button
-                        key={lesson.id}
-                        onClick={() => handleSelectLesson(lesson.id)}
-                        className={`rounded-2xl border px-4 py-2 text-left transition ${
-                          activeLessonId === lesson.id
-                            ? "border-neonGreen bg-neonGreen/10 text-white"
-                            : "border-white/10 bg-white/5 text-zinc-300 hover:border-white/30"
-                        }`}
-                      >
-                        <p className="text-xs uppercase tracking-wide text-zinc-500">
-                          {lesson.tag}
-                        </p>
-                        <p className="text-sm font-semibold">{lesson.title}</p>
-                      </button>
-                    ))}
+                    {levelOneLessons.map((lesson) => {
+                      const isUnlocked = unlockedLessonIds.has(lesson.id);
+                      const isCompleted = completedLessonIds.includes(lesson.id);
+                      return (
+                        <motion.button
+                          key={lesson.id}
+                          whileHover={isUnlocked ? { scale: 1.02 } : undefined}
+                          whileTap={isUnlocked ? { scale: 0.98 } : undefined}
+                          onClick={() => isUnlocked && handleSelectLesson(lesson.id)}
+                          className={`rounded-2xl border px-4 py-2 text-left transition ${
+                            activeLessonId === lesson.id
+                              ? "border-neonGreen bg-neonGreen/10 text-white"
+                              : isUnlocked
+                              ? "border-white/10 bg-white/5 text-zinc-300 hover:border-white/30"
+                              : "border-white/5 bg-black/30 text-zinc-500"
+                          }`}
+                          disabled={!isUnlocked}
+                        >
+                          <p className="text-xs uppercase tracking-wide text-zinc-500 flex items-center gap-2">
+                            {lesson.tag}
+                            {isCompleted && <span className="text-neonGreen">✓</span>}
+                            {!isUnlocked && <span className="text-zinc-500">🔒</span>}
+                          </p>
+                          <p className="text-sm font-semibold">{lesson.title}</p>
+                        </motion.button>
+                      );
+                    })}
                   </div>
                   {activeLesson && (
                     <div className="mt-6 grid gap-5 lg:grid-cols-[1.1fr_0.9fr]">
@@ -815,87 +929,7 @@ export default function DashboardPage() {
               </div>
             )}
           </section>
-
-          <section className="mt-10 rounded-3xl border border-white/5 bg-white/5 p-6 backdrop-blur-xl">
-            <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-              <div className="flex flex-wrap gap-2">
-                {filterOptions.map((option) => (
-                  <button
-                    key={option.value}
-                    onClick={() => setSelectedFilter(option.value)}
-                    className={`rounded-full px-4 py-1 text-sm transition ${
-                      selectedFilter === option.value
-                        ? "bg-neonGreen text-black"
-                        : "bg-white/5 text-zinc-300 hover:bg-white/10"
-                    }`}
-                  >
-                    {option.label}
-                  </button>
-                ))}
-              </div>
-              <div className="relative w-full md:w-72">
-                <input
-                  value={searchTerm}
-                  onChange={(event) => setSearchTerm(event.target.value)}
-                  placeholder={dashboardCopy.searchPlaceholder}
-                  className="w-full rounded-2xl border border-white/10 bg-black/40 px-4 py-2 text-sm outline-none placeholder:text-zinc-500"
-                />
-                <span className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-xs text-zinc-500">
-                  ⌕
-                </span>
-              </div>
-            </div>
-
-            <div className="mt-6 overflow-hidden rounded-2xl border border-white/5">
-              <div className="hidden grid-cols-[140px_1fr_150px_200px_120px] bg-white/5 px-6 py-3 text-left text-xs uppercase tracking-wide text-zinc-400 md:grid">
-                <span>{dashboardCopy.table.date}</span>
-                <span>{dashboardCopy.table.source}</span>
-                <span>{dashboardCopy.table.label}</span>
-                <span>{dashboardCopy.table.score}</span>
-                <span>{dashboardCopy.table.actions}</span>
-              </div>
-              {loadingChecks ? (
-                <SkeletonRows />
-              ) : filteredChecks.length === 0 ? (
-                <EmptyState copy={dashboardCopy.empty} />
-              ) : shouldVirtualize ? (
-                <VirtualizedCheckList
-                  items={filteredChecks}
-                  locale={locale}
-                  copy={dashboardCopy.table}
-                  onRowClick={handleRowClick}
-                  height={listHeight}
-                />
-              ) : (
-                <div className="divide-y divide-white/5">
-                  {filteredChecks.map((check) => (
-                    <CheckRowItem
-                      key={check.id}
-                      check={check}
-                      locale={locale}
-                      copy={dashboardCopy.table}
-                      onRowClick={handleRowClick}
-                    />
-                  ))}
-                </div>
-              )}
-              {filteredChecks.length > 0 && (
-                <div className="border-t border-white/5 bg-black/20 px-4 py-4 text-center">
-                  <button
-                    onClick={loadMore}
-                    disabled={loadingChecks || !hasMore}
-                    className="rounded-full border border-white/20 px-6 py-2 text-sm font-semibold text-white transition hover:border-white/40 disabled:opacity-50"
-                  >
-                    {loadingChecks
-                      ? "Loading..."
-                      : hasMore
-                      ? "Load more"
-                      : "No more results"}
-                  </button>
-                </div>
-              )}
-            </div>
-          </section>
+          )}
         </main>
       </div>
       <DetailsModal
@@ -919,7 +953,7 @@ const Sidebar = memo(function Sidebar({
   copy: DashboardCopy["sidebar"];
 }) {
   return (
-    <aside className="border-b border-white/10 bg-black/30 px-6 pt-20 pb-6 backdrop-blur md:px-8 md:pt-12 lg:min-h-screen lg:w-72 lg:border-r lg:pt-8">
+    <aside className="border-b border-white/10 bg-black/30 px-6 pt-28 pb-6 backdrop-blur md:px-8 md:pt-20 lg:min-h-screen lg:w-72 lg:border-r lg:pt-12">
       <div className="flex items-center gap-3">
         <div className="h-10 w-10 rounded-2xl bg-neonGreen/10 text-neonGreen flex items-center justify-center font-black">
           IA
