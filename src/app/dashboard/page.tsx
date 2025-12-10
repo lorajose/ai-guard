@@ -8,6 +8,7 @@ import Link from "next/link";
 import { FixedSizeList as List, type ListChildComponentProps } from "react-window";
 import { memo, useCallback, useEffect, useMemo, useState } from "react";
 import type { CSSProperties } from "react";
+import { levelOneLessons } from "@/data/academyLessons";
 
 type CheckRecord = {
   id: string;
@@ -67,6 +68,10 @@ export default function DashboardPage() {
   const [lessonLoading, setLessonLoading] = useState(false);
   const [lessonError, setLessonError] = useState<string | null>(null);
   const [lessonOpen, setLessonOpen] = useState(false);
+  const [activeLessonId, setActiveLessonId] = useState(
+    levelOneLessons[0]?.id ?? "lesson-phishing-core"
+  );
+  const [quizResponses, setQuizResponses] = useState<Record<string, string>>({});
   const normalizedPlan = planBadge?.plan?.toLowerCase() ?? "free";
   const planStatus = planBadge?.status ?? "inactive";
   const isFreeTier = normalizedPlan === "free";
@@ -100,6 +105,34 @@ export default function DashboardPage() {
     const base = isFreeTier ? modules.slice(0, 1) : modules;
     return new Set(base.map((module) => module.id));
   }, [isFreeTier, modules]);
+
+  const activeLesson = useMemo(
+    () => levelOneLessons.find((lesson) => lesson.id === activeLessonId) || levelOneLessons[0],
+    [activeLessonId]
+  );
+
+  const completedLessonIds = useMemo(
+    () =>
+      levelOneLessons
+        .filter((lesson) =>
+          lesson.quiz.every((question) => quizResponses[question.id] === question.answer)
+        )
+        .map((lesson) => lesson.id),
+    [quizResponses]
+  );
+
+  const unlockedLessonIds = useMemo(() => {
+    const allowedCount = Math.min(
+      levelOneLessons.length,
+      completedLessonIds.length + 1
+    );
+    return new Set(levelOneLessons.slice(0, allowedCount).map((lesson) => lesson.id));
+  }, [completedLessonIds]);
+
+  const academyProgress = useMemo(() => {
+    if (!levelOneLessons.length) return 0;
+    return Math.round((completedLessonIds.length / levelOneLessons.length) * 100);
+  }, [completedLessonIds]);
 
   useEffect(() => {
     console.log("[Dashboard] userId", userId);
@@ -200,6 +233,20 @@ export default function DashboardPage() {
     activeModule?.title,
     canAccessAcademy,
   ]);
+
+  const handleSelectLesson = useCallback((lessonId: string) => {
+    setActiveLessonId(lessonId);
+  }, []);
+
+  const handleSelectQuizOption = useCallback(
+    (questionId: string, option: string) => {
+      setQuizResponses((prev) => ({
+        ...prev,
+        [questionId]: option,
+      }));
+    },
+    []
+  );
 
   useEffect(() => {
     async function fetchUser() {
@@ -554,6 +601,143 @@ export default function DashboardPage() {
                       </div>
                     )}
                   </div>
+                </div>
+
+                <div className="rounded-3xl border border-white/10 bg-black/35 p-5">
+                  <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+                    <div>
+                      <p className="text-xs uppercase tracking-wide text-zinc-500">
+                        Level 1 · IA Academy
+                      </p>
+                      <h3 className="text-xl font-semibold">Mission deck</h3>
+                      <p className="text-sm text-zinc-400">
+                        Selecciona una lección para ganar XP y desbloquear medallas.
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2 text-xs text-zinc-400">
+                      <span className="rounded-full border border-white/10 px-3 py-1">
+                        {activeLesson?.xp ?? 0} XP
+                      </span>
+                      <span className="rounded-full border border-white/10 px-3 py-1">
+                        {activeLesson?.difficulty}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="mt-4 flex flex-wrap gap-2">
+                    {levelOneLessons.map((lesson) => (
+                      <button
+                        key={lesson.id}
+                        onClick={() => handleSelectLesson(lesson.id)}
+                        className={`rounded-2xl border px-4 py-2 text-left transition ${
+                          activeLessonId === lesson.id
+                            ? "border-neonGreen bg-neonGreen/10 text-white"
+                            : "border-white/10 bg-white/5 text-zinc-300 hover:border-white/30"
+                        }`}
+                      >
+                        <p className="text-xs uppercase tracking-wide text-zinc-500">
+                          {lesson.tag}
+                        </p>
+                        <p className="text-sm font-semibold">{lesson.title}</p>
+                      </button>
+                    ))}
+                  </div>
+                  {activeLesson && (
+                    <div className="mt-6 grid gap-5 lg:grid-cols-[1.1fr_0.9fr]">
+                      <div className="space-y-4 rounded-2xl border border-white/10 bg-black/30 p-4">
+                        <p className="text-sm text-zinc-200">
+                          {activeLesson.summary}
+                        </p>
+                        <div className="flex flex-wrap gap-2 text-xs text-zinc-300">
+                          {activeLesson.objectives.map((objective) => (
+                            <span
+                              key={objective}
+                              className="rounded-full border border-white/10 px-3 py-1"
+                            >
+                              {objective}
+                            </span>
+                          ))}
+                        </div>
+                        <div className="space-y-3">
+                          {activeLesson.sections.map((section) => (
+                            <div key={section.title} className="rounded-xl border border-white/5 bg-black/50 p-3">
+                              <p className="text-sm font-semibold text-white">
+                                {section.title}
+                              </p>
+                              <ul className="mt-2 space-y-1 text-sm text-zinc-300">
+                                {section.bullets.map((bullet, index) => (
+                                  <li key={`${section.title}-${index}`}>• {bullet}</li>
+                                ))}
+                              </ul>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                      <div className="rounded-2xl border border-white/10 bg-black/40 p-4">
+                        <p className="text-xs uppercase tracking-wide text-zinc-500">
+                          Mini-quiz
+                        </p>
+                        <div className="mt-3 space-y-4">
+                          {activeLesson.quiz.map((question) => {
+                            const selected = quizResponses[question.id];
+                            const isCorrect = selected && selected === question.answer;
+                            return (
+                              <div
+                                key={question.id}
+                                className="rounded-xl border border-white/10 bg-black/40 p-3 text-sm text-zinc-200"
+                              >
+                                <p className="font-semibold">{question.question}</p>
+                                <div className="mt-2 space-y-2">
+                                  {question.options.map((option) => {
+                                    const selectedOption = selected === option;
+                                    const answered = Boolean(selected);
+                                    const isWinning =
+                                      answered && option === question.answer;
+                                    const isLosing =
+                                      answered && selectedOption && !isWinning;
+                                    return (
+                                      <button
+                                        key={option}
+                                        type="button"
+                                        onClick={() =>
+                                          handleSelectQuizOption(
+                                            question.id,
+                                            option
+                                          )
+                                        }
+                                        className={`w-full rounded-full border px-3 py-1 text-left transition ${
+                                          isWinning
+                                            ? "border-neonGreen bg-neonGreen/10 text-neonGreen"
+                                            : isLosing
+                                            ? "border-red-500 bg-red-500/10 text-red-300"
+                                            : selectedOption
+                                            ? "border-white/40 bg-white/10 text-white"
+                                            : "border-white/10 bg-black/30 text-zinc-300 hover:border-white/30"
+                                        }`}
+                                        disabled={answered}
+                                      >
+                                        {option}
+                                      </button>
+                                    );
+                                  })}
+                                </div>
+                                {selected && (
+                                  <p
+                                    className={`mt-2 text-xs ${
+                                      selected === question.answer
+                                        ? "text-neonGreen"
+                                        : "text-red-300"
+                                    }`}
+                                  >
+                                    {question.explanation}
+                                  </p>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 <div className="rounded-3xl border border-white/10 bg-black/40 p-5">
