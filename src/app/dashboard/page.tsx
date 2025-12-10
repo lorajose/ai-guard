@@ -475,7 +475,7 @@ const shouldVirtualize = filteredChecks.length > 80;
             </div>
           </header>
 
-          {activeTab === "overview" ? (
+          {activeTab === "overview" && (
             <>
               <section className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                 {stats.map((stat) => (
@@ -571,46 +571,6 @@ const shouldVirtualize = filteredChecks.length > 80;
                     </div>
                   )}
                 </div>
-              </section>
-            </>
-          ) : (
-              <section className="mt-8 rounded-[32px] border border-white/10 bg-gradient-to-br from-zinc-950 via-black to-cyberBlue/10 p-6 shadow-[0_30px_80px_rgba(0,0,0,0.4)]">
-                <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-                  <div>
-                    <p className="text-xs uppercase tracking-[0.4em] text-zinc-500">
-                      {academyCopy.title}
-                    </p>
-                  <h2 className="mt-2 text-2xl font-semibold">
-                    {academyCopy.title}
-                  </h2>
-                  <p className="text-sm text-zinc-400">{academyCopy.description}</p>
-                </div>
-                {planBadge && (
-                  <span className="inline-flex w-fit items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-1 text-xs uppercase tracking-wider text-zinc-300">
-                    🎮 {academyLevelLabel}
-                  </span>
-                )}
-              </div>
-
-              {canAccessAcademy ? (
-                <>
-                  <div className="mt-6 rounded-2xl border border-white/10 bg-black/30 p-4">
-                    <p className="text-xs uppercase tracking-[0.4em] text-zinc-500">
-                      Nivel 1 · Progreso
-                    </p>
-                    <div className="mt-3 h-3 rounded-full bg-white/5">
-                      <div
-                        className="h-full rounded-full bg-gradient-to-r from-neonGreen via-emerald-400 to-cyan-400 transition-all duration-700"
-                        style={{ width: `${academyProgress}%` }}
-                      />
-                    </div>
-                    <p className="mt-1 text-sm text-zinc-400">
-                      {academyProgress}% completado • {completedLessonIds.length} /{" "}
-                      {levelOneLessons.length} misiones
-                    </p>
-                  </div>
-                  <div className="mt-4 grid gap-6 lg:grid-cols-[1.1fr_0.95fr]">
-                    <div className="space-y-5">
                       <div className="grid gap-4 sm:grid-cols-3">
                         <div className="rounded-2xl border border-white/10 bg-black/40 p-4">
                           <p className="text-xs uppercase tracking-wide text-zinc-500">
