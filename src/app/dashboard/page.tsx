@@ -571,51 +571,10 @@ const shouldVirtualize = filteredChecks.length > 80;
                     </div>
                   )}
                 </div>
-                      <div className="grid gap-4 sm:grid-cols-3">
-                        <div className="rounded-2xl border border-white/10 bg-black/40 p-4">
-                          <p className="text-xs uppercase tracking-wide text-zinc-500">
-                            {academyCopy.gamification.streakLabel}
-                          </p>
-                          <p className="mt-2 text-3xl font-semibold">{streak}d</p>
-                        </div>
-                        <div className="rounded-2xl border border-white/10 bg-black/40 p-4">
-                          <p className="text-xs uppercase tracking-wide text-zinc-500">
-                            {academyCopy.gamification.xpLabel}
-                          </p>
-                          <p className="mt-2 text-3xl font-semibold">{xpEarned}</p>
-                          <div className="mt-3 h-1.5 rounded-full bg-white/10">
-                            <div
-                              className="h-full rounded-full bg-neonGreen"
-                              style={{ width: `${progress}%` }}
-                            />
-                          </div>
-                        </div>
-                        <div className="rounded-2xl border border-white/10 bg-black/40 p-4">
-                          <p className="text-xs uppercase tracking-wide text-zinc-500">
-                            {academyCopy.gamification.badgeLabel}
-                          </p>
-                          <p className="mt-2 text-lg font-semibold">
-                            {academyLevelLabel}
-                          </p>
-                          <p className="mt-2 text-xs uppercase tracking-wide text-zinc-500">
-                            {academyCopy.gamification.medalsLabel}
-                          </p>
-                          <div className="mt-1 flex flex-wrap gap-2 text-xs">
-                            {(medalsUnlocked.length ? medalsUnlocked : ["—"]).map(
-                              (medal) => (
-                                <span
-                                  key={medal}
-                                  className="rounded-full border border-white/20 px-2 py-0.5 text-white/80"
-                                >
-                                  {medal}
-                                </span>
-                              )
-                            )}
-                          </div>
-                        </div>
-                      </div>
 
-
+              </section>
+            </>
+          )}
           {activeTab === "academy" && (
             <section className="mt-10 rounded-[32px] border border-white/10 bg-gradient-to-br from-zinc-950 via-black to-cyberBlue/10 p-6 shadow-[0_30px_80px_rgba(0,0,0,0.4)]">
             <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
@@ -970,88 +929,6 @@ const shouldVirtualize = filteredChecks.length > 80;
               </div>
             )}
           </section>
-
-          <section className="mt-10 rounded-3xl border border-white/5 bg-white/5 p-6 backdrop-blur-xl">
-            <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-              <div className="flex flex-wrap gap-2">
-                {filterOptions.map((option) => (
-                  <button
-                    key={option.value}
-                    onClick={() => setSelectedFilter(option.value)}
-                    className={`rounded-full px-4 py-1 text-sm transition ${
-                      selectedFilter === option.value
-                        ? "bg-neonGreen text-black"
-                        : "bg-white/5 text-zinc-300 hover:bg-white/10"
-                    }`}
-                  >
-                    {option.label}
-                  </button>
-                ))}
-              </div>
-              <div className="relative w-full md:w-72">
-                <input
-                  value={searchTerm}
-                  onChange={(event) => setSearchTerm(event.target.value)}
-                  placeholder={dashboardCopy.searchPlaceholder}
-                  className="w-full rounded-2xl border border-white/10 bg-black/40 px-4 py-2 text-sm outline-none placeholder:text-zinc-500"
-                />
-                <span className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-xs text-zinc-500">
-                  ⌕
-                </span>
-              </div>
-            </div>
-
-            <div className="mt-6 overflow-hidden rounded-2xl border border-white/5">
-              <div className="hidden grid-cols-[140px_1fr_150px_200px_120px] bg-white/5 px-6 py-3 text-left text-xs uppercase tracking-wide text-zinc-400 md:grid">
-                <span>{dashboardCopy.table.date}</span>
-                <span>{dashboardCopy.table.source}</span>
-                <span>{dashboardCopy.table.label}</span>
-                <span>{dashboardCopy.table.score}</span>
-                <span>{dashboardCopy.table.actions}</span>
-              </div>
-              {loadingChecks ? (
-                <SkeletonRows />
-              ) : filteredChecks.length === 0 ? (
-                <EmptyState copy={dashboardCopy.empty} />
-              ) : shouldVirtualize ? (
-                <VirtualizedCheckList
-                  items={filteredChecks}
-                  locale={locale}
-                  copy={dashboardCopy.table}
-                  onRowClick={handleRowClick}
-                  height={listHeight}
-                />
-              ) : (
-                <div className="divide-y divide-white/5">
-                  {filteredChecks.map((check) => (
-                    <CheckRowItem
-                      key={check.id}
-                      check={check}
-                      locale={locale}
-                      copy={dashboardCopy.table}
-                      onRowClick={handleRowClick}
-                    />
-                  ))}
-                </div>
-              )}
-              {filteredChecks.length > 0 && (
-                <div className="border-t border-white/5 bg-black/20 px-4 py-4 text-center">
-                  <button
-                    onClick={loadMore}
-                    disabled={loadingChecks || !hasMore}
-                    className="rounded-full border border-white/20 px-6 py-2 text-sm font-semibold text-white transition hover:border-white/40 disabled:opacity-50"
-                  >
-                    {loadingChecks
-                      ? "Loading..."
-                      : hasMore
-                      ? "Load more"
-                      : "No more results"}
-                  </button>
-                </div>
-              )}
-              </div>
-            </section>
-          )}
           )}
         </main>
       </div>
