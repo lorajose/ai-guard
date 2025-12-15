@@ -106,9 +106,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   );
 
   const signOut = useCallback(async () => {
+    const redirectUrl = process.env.NEXT_PUBLIC_APP_URL || "/";
     await supabase.auth.signOut();
-    router.refresh();
-  }, [router, supabase]);
+    window.location.href = redirectUrl;
+  }, [supabase]);
 
   const sendMagicLink = useCallback(
     async (email: string) => {
