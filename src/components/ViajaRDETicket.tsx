@@ -71,16 +71,45 @@ export function ViajaRDETicketForm() {
   const [sectionIndex, setSectionIndex] = useState(0);
   const [form, setForm] = useState<Record<string, string>>({});
   const [showHelp, setShowHelp] = useState(false);
+  const [needsFlight, setNeedsFlight] = useState(false);
+
+  const trustedAirlines = [
+    {
+      id: "delta",
+      name: "Delta",
+      perks: { es: "SkyMiles + cambios flexibles", en: "SkyMiles + flexible changes" },
+      link:
+        process.env.NEXT_PUBLIC_AFFILIATE_DELTA ||
+        "https://www.delta.com/?ref=iaguard",
+    },
+    {
+      id: "aa",
+      name: "American Airlines",
+      perks: { es: "Soporte 24/7 y upgrades", en: "24/7 support and upgrades" },
+      link:
+        process.env.NEXT_PUBLIC_AFFILIATE_AA ||
+        "https://www.aa.com/?ref=iaguard",
+    },
+    {
+      id: "jetblue",
+      name: "JetBlue",
+      perks: { es: "Wi-Fi gratis y asientos cómodos", en: "Free Wi-Fi and comfy seats" },
+      link:
+        process.env.NEXT_PUBLIC_AFFILIATE_JETBLUE ||
+        "https://www.jetblue.com/?ref=iaguard",
+    },
+  ];
 
   const currentSection = sectionCopy[sectionIndex];
 
   const canProceed = useMemo(() => {
     if (currentSection.key === "review") return true;
+    if (currentSection.key === "flight" && needsFlight) return true;
     return currentSection.fields.every((field) => {
       const value = form[field.name];
       return value && value.trim().length > 0;
     });
-  }, [currentSection, form]);
+  }, [currentSection, form, needsFlight]);
 
   const handleChange = (name: string, value: string) => {
     setForm((prev) => ({ ...prev, [name]: value }));
@@ -208,21 +237,84 @@ export function ViajaRDETicketForm() {
                 </button>
               </div>
             ) : (
-              currentSection.fields.map((field) => (
-                <label
-                  key={field.name}
-                  className="block rounded-2xl border border-white/15 bg-black/30 p-4 text-xl"
-                >
-                  <span className="text-zinc-400">{field.label[locale]}</span>
-                  <input
-                    type={field.type || "text"}
-                    value={form[field.name] || ""}
-                    onChange={(event) => handleChange(field.name, event.target.value)}
-                    className="mt-3 w-full rounded-2xl border border-white/20 bg-black/60 px-4 py-3 text-white placeholder:text-zinc-500 focus:border-neonGreen focus:outline-none"
-                    placeholder={field.label[locale]}
-                  />
-                </label>
-              ))
+              <>
+                {currentSection.fields.map((field) => (
+                  <label
+                    key={field.name}
+                    className="block rounded-2xl border border-white/15 bg-black/30 p-4 text-xl"
+                  >
+                    <span className="text-zinc-400">{field.label[locale]}</span>
+                    <input
+                      type={field.type || "text"}
+                      value={form[field.name] || ""}
+                      onChange={(event) => handleChange(field.name, event.target.value)}
+                      className="mt-3 w-full rounded-2xl border border-white/20 bg-black/60 px-4 py-3 text-white placeholder:text-zinc-500 focus:border-neonGreen focus:outline-none"
+                      placeholder={field.label[locale]}
+                    />
+                  </label>
+                ))}
+
+                {currentSection.key === "flight" && (
+                  <div className="rounded-2xl border border-amber-400/30 bg-amber-500/10 p-5">
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                      <div>
+                        <p className="text-xl font-semibold text-amber-200">
+                          {locale === "es"
+                            ? "¿No tienes vuelo? El asistente lo compra contigo."
+                            : "No flight yet? The assistant will buy with you."}
+                        </p>
+                        <p className="text-sm text-amber-100/80">
+                          {locale === "es"
+                            ? "Usamos aerolíneas confiables (Delta, JetBlue, American). Cada compra genera ingreso por referencia para IA Guard sin costo extra."
+                            : "We use trusted airlines (Delta, JetBlue, American). Each purchase earns IA Guard a referral at no extra cost to you."}
+                        </p>
+                      </div>
+                      <button
+                        onClick={() => setNeedsFlight((prev) => !prev)}
+                        className={`rounded-full px-4 py-2 text-base font-semibold ${
+                          needsFlight
+                            ? "bg-amber-300 text-black"
+                            : "bg-white/10 text-white"
+                        }`}
+                      >
+                        {needsFlight
+                          ? locale === "es"
+                            ? "Necesito ayuda de compra"
+                            : "I need to buy"
+                          : locale === "es"
+                          ? "Ya tengo vuelo"
+                          : "I already have a flight"}
+                      </button>
+                    </div>
+
+                    {needsFlight && (
+                      <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                        {trustedAirlines.map((airline) => (
+                          <a
+                            key={airline.id}
+                            href={airline.link}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="rounded-xl border border-white/10 bg-black/30 p-4 transition hover:-translate-y-1 hover:border-amber-200/60"
+                          >
+                            <p className="text-lg font-semibold text-white">
+                              {airline.name}
+                            </p>
+                            <p className="mt-1 text-sm text-amber-100/80">
+                              {airline.perks[locale]}
+                            </p>
+                            <p className="mt-2 text-sm text-amber-200">
+                              {locale === "es"
+                                ? "Abrir con el asistente →"
+                                : "Open with assistant →"}
+                            </p>
+                          </a>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </>
             )}
           </motion.div>
         </AnimatePresence>
