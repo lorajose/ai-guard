@@ -3,6 +3,7 @@ import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 
 export async function GET(request: Request) {
+  const redirectTarget = process.env.NEXT_PUBLIC_APP_URL || "/";
   const cookieStore = await cookies();
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -24,7 +25,9 @@ export async function GET(request: Request) {
 
   await supabase.auth.signOut();
 
-  const url = new URL("/login?guest=1", request.url);
-  url.searchParams.set("from", "logout");
-  return NextResponse.redirect(url);
+  const destination = redirectTarget.startsWith("http")
+    ? redirectTarget
+    : new URL(redirectTarget, request.url).toString();
+
+  return NextResponse.redirect(destination);
 }
