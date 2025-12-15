@@ -43,6 +43,30 @@ const translations = {
       es: "Comprar aquí",
       en: "Buy here",
     },
+    passportManual: {
+      es: "Verificar manual",
+      en: "Verify manually",
+    },
+    passportPhoto: {
+      es: "Subir o tomar foto",
+      en: "Upload or take photo",
+    },
+    passportNumber: {
+      es: "Número de pasaporte",
+      en: "Passport number",
+    },
+    passportExpiry: {
+      es: "Fecha de vencimiento",
+      en: "Expiration date",
+    },
+    passportUpload: {
+      es: "Sube o toma una foto (JPG/PNG)",
+      en: "Upload or take a photo (JPG/PNG)",
+    },
+    passportUploaded: {
+      es: "Imagen cargada",
+      en: "Image uploaded",
+    },
   },
 };
 
@@ -124,6 +148,10 @@ export function ViajaRDSteps() {
   const [flightNumber, setFlightNumber] = useState("");
   const [flightDate, setFlightDate] = useState("");
   const [needsFlight, setNeedsFlight] = useState(false);
+  const [passportMode, setPassportMode] = useState<"manual" | "photo">("manual");
+  const [passportNumber, setPassportNumber] = useState("");
+  const [passportExpiry, setPassportExpiry] = useState("");
+  const [passportImageName, setPassportImageName] = useState("");
 
   const trustedAirlines = [
     {
@@ -176,6 +204,13 @@ export function ViajaRDSteps() {
     if (steps[currentStep].key === "flight" && !needsFlight) {
       if (flightNumber.trim().length < 3 || !flightDate) return;
     }
+    if (steps[currentStep].key === "passport") {
+      if (passportMode === "manual") {
+        if (passportNumber.trim().length < 6 || !passportExpiry) return;
+      } else {
+        if (!passportImageName) return;
+      }
+    }
     const updated = [...completed];
     updated[currentStep] = true;
     setCompleted(updated);
@@ -219,10 +254,10 @@ export function ViajaRDSteps() {
                 <button
                   key={code}
                   onClick={() => setLocale(code)}
-                  className={`rounded-full px-4 py-2 text-lg font-semibold shadow ${
+                  className={`rounded-full px-4 py-2 text-lg font-semibold shadow text-white ${
                     locale === code
-                      ? "bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-amber-300/60"
-                      : "bg-white/70 text-amber-800 border border-amber-200"
+                      ? "bg-gradient-to-r from-amber-500 to-orange-500 shadow-amber-300/60"
+                      : "bg-amber-700/70 border border-amber-300"
                   }`}
                 >
                   {code.toUpperCase()}
@@ -279,12 +314,82 @@ export function ViajaRDSteps() {
                       </span>
                     )}
                     <button
-                      className="rounded-full bg-white px-3 py-2 text-sm font-semibold text-amber-800 shadow-sm border border-amber-200"
+                      className="rounded-full bg-gradient-to-r from-amber-500 to-orange-500 px-3 py-2 text-sm font-semibold text-white shadow-sm border border-amber-300"
                       onClick={() => setCurrentStep(index)}
                     >
                       {locale === "es" ? "Ir" : "Go"}
                     </button>
                   </div>
+                  {isActive && step.key === "passport" && (
+                    <div className="mt-4 grid w-full gap-3 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3">
+                      <div className="flex flex-wrap gap-3">
+                        <button
+                          onClick={() => setPassportMode("manual")}
+                          className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
+                            passportMode === "manual"
+                              ? "bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow"
+                              : "bg-amber-600 text-white border border-amber-300"
+                          }`}
+                        >
+                          {translations.actions.passportManual[locale]}
+                        </button>
+                        <button
+                          onClick={() => setPassportMode("photo")}
+                          className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
+                            passportMode === "photo"
+                              ? "bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow"
+                              : "bg-amber-600 text-white border border-amber-300"
+                          }`}
+                        >
+                          {translations.actions.passportPhoto[locale]}
+                        </button>
+                      </div>
+
+                      {passportMode === "manual" ? (
+                        <div className="grid gap-3 sm:grid-cols-2">
+                          <label className="text-sm text-amber-800">
+                            {translations.actions.passportNumber[locale]}
+                            <input
+                              value={passportNumber}
+                              onChange={(e) => setPassportNumber(e.target.value)}
+                              className="mt-2 w-full rounded-xl border border-amber-200 bg-white px-3 py-2 text-amber-900 shadow-inner placeholder:text-amber-400 focus:border-orange-400 focus:outline-none"
+                              placeholder="P1234567"
+                            />
+                          </label>
+                          <label className="text-sm text-amber-800">
+                            {translations.actions.passportExpiry[locale]}
+                            <input
+                              type="date"
+                              value={passportExpiry}
+                              onChange={(e) => setPassportExpiry(e.target.value)}
+                              className="mt-2 w-full rounded-xl border border-amber-200 bg-white px-3 py-2 text-amber-900 shadow-inner focus:border-orange-400 focus:outline-none"
+                            />
+                          </label>
+                        </div>
+                      ) : (
+                        <div className="flex flex-col gap-2">
+                          <label className="text-sm text-amber-800">
+                            {translations.actions.passportUpload[locale]}
+                            <input
+                              type="file"
+                              accept="image/*"
+                              capture="environment"
+                              onChange={(event) => {
+                                const file = event.target.files?.[0];
+                                setPassportImageName(file ? file.name : "");
+                              }}
+                              className="mt-2 w-full rounded-xl border border-amber-200 bg-white px-3 py-2 text-amber-900 shadow-inner focus:border-orange-400 focus:outline-none"
+                            />
+                          </label>
+                          {passportImageName && (
+                            <p className="text-sm font-semibold text-amber-900">
+                              {translations.actions.passportUploaded[locale]}: {passportImageName}
+                            </p>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  )}
                   {isActive && step.key === "flight" && (
                     <div className="mt-4 grid w-full gap-3 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3">
                       <div className="grid gap-3 sm:grid-cols-2">
@@ -313,7 +418,7 @@ export function ViajaRDSteps() {
                           className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
                             needsFlight
                               ? "bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow"
-                              : "bg-white text-amber-900 border border-amber-200"
+                              : "bg-amber-600 text-white border border-amber-300"
                           }`}
                         >
                           {needsFlight
@@ -328,7 +433,7 @@ export function ViajaRDSteps() {
                                 href={airline.link}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="rounded-full border border-amber-200 bg-white px-3 py-2 font-semibold shadow-sm hover:border-orange-300"
+                                className="rounded-full border border-amber-300 bg-gradient-to-r from-amber-500 to-orange-500 px-3 py-2 font-semibold text-white shadow-sm hover:border-orange-300"
                               >
                                 {airline.name} · {translations.actions.buyHere[locale]}
                               </a>
@@ -348,7 +453,7 @@ export function ViajaRDSteps() {
               <button
                 onClick={handlePrev}
                 disabled={currentStep === 0}
-                className="flex-1 rounded-2xl border border-amber-200 bg-white px-4 py-4 text-lg font-semibold text-amber-900 shadow-sm disabled:opacity-40"
+                className="flex-1 rounded-2xl border border-amber-300 bg-amber-600 px-4 py-4 text-lg font-semibold text-white shadow-sm disabled:opacity-40"
               >
                 ◀ {translations.actions.prev[locale]}
               </button>
@@ -361,7 +466,7 @@ export function ViajaRDSteps() {
               <button
                 onClick={handleNext}
                 disabled={!completed[currentStep] || currentStep === steps.length - 1}
-                className="flex-1 rounded-2xl border border-amber-200 bg-white px-4 py-4 text-lg font-semibold text-amber-900 shadow-sm disabled:opacity-40"
+                className="flex-1 rounded-2xl border border-amber-300 bg-amber-700 px-4 py-4 text-lg font-semibold text-white shadow-sm disabled:opacity-40"
               >
                 {translations.actions.next[locale]} ▶
               </button>
