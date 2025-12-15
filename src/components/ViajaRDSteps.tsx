@@ -67,6 +67,22 @@ const translations = {
       es: "Imagen cargada",
       en: "Image uploaded",
     },
+    addTraveler: {
+      es: "Agregar viajero",
+      en: "Add traveler",
+    },
+    travelerLabel: {
+      es: "Viajero",
+      en: "Traveler",
+    },
+    travelerName: {
+      es: "Nombre completo",
+      en: "Full name",
+    },
+    useCamera: {
+      es: "Usar cámara",
+      en: "Use camera",
+    },
   },
 };
 
@@ -148,10 +164,25 @@ export function ViajaRDSteps() {
   const [flightNumber, setFlightNumber] = useState("");
   const [flightDate, setFlightDate] = useState("");
   const [needsFlight, setNeedsFlight] = useState(false);
-  const [passportMode, setPassportMode] = useState<"manual" | "photo">("manual");
-  const [passportNumber, setPassportNumber] = useState("");
-  const [passportExpiry, setPassportExpiry] = useState("");
-  const [passportImageName, setPassportImageName] = useState("");
+  const [passports, setPassports] = useState<
+    {
+      id: number;
+      name: string;
+      mode: "manual" | "photo";
+      number: string;
+      expiry: string;
+      imageName: string;
+    }[]
+  >([
+    {
+      id: 1,
+      name: "",
+      mode: "manual",
+      number: "",
+      expiry: "",
+      imageName: "",
+    },
+  ]);
 
   const trustedAirlines = [
     {
@@ -205,11 +236,14 @@ export function ViajaRDSteps() {
       if (flightNumber.trim().length < 3 || !flightDate) return;
     }
     if (steps[currentStep].key === "passport") {
-      if (passportMode === "manual") {
-        if (passportNumber.trim().length < 6 || !passportExpiry) return;
-      } else {
-        if (!passportImageName) return;
-      }
+      const allValid = passports.every((p) =>
+        p.mode === "manual"
+          ? p.name.trim().length > 1 &&
+            p.number.trim().length >= 6 &&
+            Boolean(p.expiry)
+          : p.name.trim().length > 1 && Boolean(p.imageName)
+      );
+      if (!allValid) return;
     }
     const updated = [...completed];
     updated[currentStep] = true;
@@ -321,73 +355,154 @@ export function ViajaRDSteps() {
                     </button>
                   </div>
                   {isActive && step.key === "passport" && (
-                    <div className="mt-4 grid w-full gap-3 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3">
-                      <div className="flex flex-wrap gap-3">
-                        <button
-                          onClick={() => setPassportMode("manual")}
-                          className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
-                            passportMode === "manual"
-                              ? "bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow"
-                              : "bg-amber-600 text-white border border-amber-300"
-                          }`}
+                    <div className="mt-4 grid w-full gap-4 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3">
+                      {passports.map((p, idx) => (
+                        <div
+                          key={p.id}
+                          className="rounded-2xl border border-amber-200 bg-white/80 p-4 shadow-sm"
                         >
-                          {translations.actions.passportManual[locale]}
-                        </button>
-                        <button
-                          onClick={() => setPassportMode("photo")}
-                          className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
-                            passportMode === "photo"
-                              ? "bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow"
-                              : "bg-amber-600 text-white border border-amber-300"
-                          }`}
-                        >
-                          {translations.actions.passportPhoto[locale]}
-                        </button>
-                      </div>
-
-                      {passportMode === "manual" ? (
-                        <div className="grid gap-3 sm:grid-cols-2">
-                          <label className="text-sm text-amber-800">
-                            {translations.actions.passportNumber[locale]}
-                            <input
-                              value={passportNumber}
-                              onChange={(e) => setPassportNumber(e.target.value)}
-                              className="mt-2 w-full rounded-xl border border-amber-200 bg-white px-3 py-2 text-amber-900 shadow-inner placeholder:text-amber-400 focus:border-orange-400 focus:outline-none"
-                              placeholder="P1234567"
-                            />
-                          </label>
-                          <label className="text-sm text-amber-800">
-                            {translations.actions.passportExpiry[locale]}
-                            <input
-                              type="date"
-                              value={passportExpiry}
-                              onChange={(e) => setPassportExpiry(e.target.value)}
-                              className="mt-2 w-full rounded-xl border border-amber-200 bg-white px-3 py-2 text-amber-900 shadow-inner focus:border-orange-400 focus:outline-none"
-                            />
-                          </label>
-                        </div>
-                      ) : (
-                        <div className="flex flex-col gap-2">
-                          <label className="text-sm text-amber-800">
-                            {translations.actions.passportUpload[locale]}
-                            <input
-                              type="file"
-                              accept="image/*"
-                              capture="environment"
-                              onChange={(event) => {
-                                const file = event.target.files?.[0];
-                                setPassportImageName(file ? file.name : "");
-                              }}
-                              className="mt-2 w-full rounded-xl border border-amber-200 bg-white px-3 py-2 text-amber-900 shadow-inner focus:border-orange-400 focus:outline-none"
-                            />
-                          </label>
-                          {passportImageName && (
-                            <p className="text-sm font-semibold text-amber-900">
-                              {translations.actions.passportUploaded[locale]}: {passportImageName}
+                          <div className="mb-3 flex items-center justify-between">
+                            <p className="text-sm font-semibold text-amber-800">
+                              {translations.actions.travelerLabel[locale]} #{idx + 1}
                             </p>
-                          )}
+                          </div>
+                          <div className="grid gap-3 sm:grid-cols-2">
+                            <label className="text-sm text-amber-800 sm:col-span-2">
+                              {translations.actions.travelerName[locale]}
+                              <input
+                                value={p.name}
+                                onChange={(e) =>
+                                  setPassports((prev) =>
+                                    prev.map((item) =>
+                                      item.id === p.id ? { ...item, name: e.target.value } : item
+                                    )
+                                  )
+                                }
+                                className="mt-2 w-full rounded-xl border border-amber-200 bg-white px-3 py-2 text-amber-900 shadow-inner placeholder:text-amber-400 focus:border-orange-400 focus:outline-none"
+                                placeholder="Nombre y apellido"
+                              />
+                            </label>
+                            <div className="flex flex-wrap gap-2 sm:col-span-2">
+                              <button
+                                onClick={() =>
+                                  setPassports((prev) =>
+                                    prev.map((item) =>
+                                      item.id === p.id ? { ...item, mode: "manual" } : item
+                                    )
+                                  )
+                                }
+                                className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
+                                  p.mode === "manual"
+                                    ? "bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow"
+                                    : "bg-amber-600 text-white border border-amber-300"
+                                }`}
+                              >
+                                {translations.actions.passportManual[locale]}
+                              </button>
+                              <button
+                                onClick={() =>
+                                  setPassports((prev) =>
+                                    prev.map((item) =>
+                                      item.id === p.id ? { ...item, mode: "photo" } : item
+                                    )
+                                  )
+                                }
+                                className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
+                                  p.mode === "photo"
+                                    ? "bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow"
+                                    : "bg-amber-600 text-white border border-amber-300"
+                                }`}
+                              >
+                                {translations.actions.passportPhoto[locale]}
+                              </button>
+                            </div>
+
+                            {p.mode === "manual" ? (
+                              <>
+                                <label className="text-sm text-amber-800">
+                                  {translations.actions.passportNumber[locale]}
+                                  <input
+                                    value={p.number}
+                                    onChange={(e) =>
+                                      setPassports((prev) =>
+                                        prev.map((item) =>
+                                          item.id === p.id ? { ...item, number: e.target.value } : item
+                                        )
+                                      )
+                                    }
+                                    className="mt-2 w-full rounded-xl border border-amber-200 bg-white px-3 py-2 text-amber-900 shadow-inner placeholder:text-amber-400 focus:border-orange-400 focus:outline-none"
+                                    placeholder="P1234567"
+                                  />
+                                </label>
+                                <label className="text-sm text-amber-800">
+                                  {translations.actions.passportExpiry[locale]}
+                                  <input
+                                    type="date"
+                                    value={p.expiry}
+                                    onChange={(e) =>
+                                      setPassports((prev) =>
+                                        prev.map((item) =>
+                                          item.id === p.id ? { ...item, expiry: e.target.value } : item
+                                        )
+                                      )
+                                    }
+                                    className="mt-2 w-full rounded-xl border border-amber-200 bg-white px-3 py-2 text-amber-900 shadow-inner focus:border-orange-400 focus:outline-none"
+                                  />
+                                </label>
+                              </>
+                            ) : (
+                              <div className="sm:col-span-2">
+                                <label className="text-sm text-amber-800">
+                                  {translations.actions.passportUpload[locale]}
+                                  <input
+                                    type="file"
+                                    accept="image/*"
+                                    capture="environment"
+                                    onChange={(event) => {
+                                      const file = event.target.files?.[0];
+                                      setPassports((prev) =>
+                                        prev.map((item) =>
+                                          item.id === p.id
+                                            ? { ...item, imageName: file ? file.name : "" }
+                                            : item
+                                        )
+                                      );
+                                    }}
+                                    className="mt-2 w-full rounded-xl border border-amber-200 bg-white px-3 py-2 text-amber-900 shadow-inner focus:border-orange-400 focus:outline-none"
+                                  />
+                                </label>
+                                {p.imageName && (
+                                  <p className="mt-1 text-sm font-semibold text-amber-900">
+                                    {translations.actions.passportUploaded[locale]}: {p.imageName}
+                                  </p>
+                                )}
+                                <p className="mt-1 text-xs text-amber-700">
+                                  {translations.actions.useCamera[locale]}: {locale === "es" ? "usa la opción de cámara del dispositivo" : "use the device camera option"}
+                                </p>
+                              </div>
+                            )}
+                          </div>
                         </div>
-                      )}
+                      ))}
+
+                      <button
+                        onClick={() =>
+                          setPassports((prev) => [
+                            ...prev,
+                            {
+                              id: prev.length + 1,
+                              name: "",
+                              mode: "manual",
+                              number: "",
+                              expiry: "",
+                              imageName: "",
+                            },
+                          ])
+                        }
+                        className="w-full rounded-2xl border border-amber-300 bg-gradient-to-r from-amber-500 to-orange-500 px-4 py-3 text-sm font-semibold text-white shadow"
+                      >
+                        + {translations.actions.addTraveler[locale]}
+                      </button>
                     </div>
                   )}
                   {isActive && step.key === "flight" && (
