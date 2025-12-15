@@ -69,15 +69,6 @@ export async function middleware(req: NextRequest) {
     return NextResponse.redirect(new URL("/dashboard", req.url));
   }
 
-  if (
-    isAuthenticated &&
-    userId &&
-    ACTIVE_STATUSES.has(((await ensurePlanInfo())?.status ?? "").toLowerCase()) &&
-    pathname === "/"
-  ) {
-    return NextResponse.redirect(new URL("/dashboard", req.url));
-  }
-
   if (isAuthenticated && needsPro && userId && !isSuperAdmin) {
     const planData = await ensurePlanInfo();
     if (!planData?.isPro) {
