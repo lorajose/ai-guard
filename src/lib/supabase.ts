@@ -1,16 +1,20 @@
 import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 
-const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
-  throw new Error(
-    "Supabase URL o Anon Key no configurados. Revisa tus variables de entorno."
-  );
+function assertSupabaseEnv() {
+  if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
+    throw new Error(
+      "Supabase URL o Anon Key no configurados. Define NEXT_PUBLIC_SUPABASE_URL y NEXT_PUBLIC_SUPABASE_ANON_KEY."
+    );
+  }
+  return { url: SUPABASE_URL, key: SUPABASE_ANON_KEY };
 }
 
 export function createSupabaseBrowserClient() {
-  return createSupabaseClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+  const { url, key } = assertSupabaseEnv();
+  return createSupabaseClient(url, key, {
     auth: {
       persistSession: true,
       detectSessionInUrl: true,
@@ -19,7 +23,8 @@ export function createSupabaseBrowserClient() {
 }
 
 export function createSupabaseServerClient() {
-  return createSupabaseClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+  const { url, key } = assertSupabaseEnv();
+  return createSupabaseClient(url, key, {
     auth: {
       persistSession: false,
     },
