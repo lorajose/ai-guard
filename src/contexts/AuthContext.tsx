@@ -71,6 +71,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (error) {
         return { success: false, error: error.message };
       }
+      const { data } = await supabase.auth.getSession();
+      if (data.session) {
+        await fetch("/auth/callback", {
+          method: "POST",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ event: "SIGNED_IN", session: data.session }),
+        });
+      }
       router.push("/dashboard");
       return { success: true };
     },
