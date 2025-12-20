@@ -145,12 +145,12 @@ export function VoiceflowChat() {
 
   function extractPhoneFromText(text: string) {
     const keywordMatch = text.match(
-      /(telefono|teléfono|whatsapp|celular|cel|phone)\D+([+()\\d][\\d\\s().-]{6,}\\d)/i
+      /(telefono|teléfono|whatsapp|celular|cel|phone)\D+([+()\d][\d\s().-]{6,}\d)/i
     );
     if (keywordMatch?.[2]) {
       return normalizePhone(keywordMatch[2]);
     }
-    const genericMatch = text.match(/([+()\\d][\\d\\s().-]{6,}\\d)/);
+    const genericMatch = text.match(/([+()\d][\d\s().-]{6,}\d)/);
     if (genericMatch?.[1]) {
       return normalizePhone(genericMatch[1]);
     }
