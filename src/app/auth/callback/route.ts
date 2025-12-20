@@ -1,23 +1,36 @@
 // src/app/auth/callback/route.ts
 import { createServerClient } from "@supabase/ssr";
-import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 
-async function getSupabaseForRoute() {
-  const cookieStore = await cookies();
+function createSupabaseForRoute(
+  request: Request,
+  response: NextResponse
+) {
+  const requestCookies = new Map(
+    request.headers
+      .get("cookie")
+      ?.split(";")
+      .map((item) => item.trim().split("=")) || []
+  );
+
   return createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
         get(name) {
-          return cookieStore.get(name)?.value;
+          return requestCookies.get(name);
         },
         set(name, value, options) {
-          cookieStore.set({ name, value, ...options });
+          response.cookies.set({ name, value, ...options });
         },
         remove(name, options) {
-          cookieStore.delete({ name, ...options });
+          response.cookies.set({
+            name,
+            value: "",
+            ...options,
+            maxAge: 0,
+          });
         },
       },
     }
@@ -25,30 +38,34 @@ async function getSupabaseForRoute() {
 }
 
 export async function GET(request: Request) {
+  const response = NextResponse.redirect(new URL("/dashboard", request.url));
   const url = new URL(request.url);
   const code = url.searchParams.get("code");
   const next = url.searchParams.get("next") || "/dashboard";
 
   if (code) {
-    const supabase = await getSupabaseForRoute();
+    const supabase = createSupabaseForRoute(request, response);
     await supabase.auth.exchangeCodeForSession(code);
   }
 
-  return NextResponse.redirect(new URL(next, request.url));
+  return NextResponse.redirect(new URL(next, request.url), {
+    headers: response.headers,
+  });
 }
 
 export async function POST(request: Request) {
-  const supabase = await getSupabaseForRoute();
+  const response = NextResponse.json({ success: true });
+  const supabase = createSupabaseForRoute(request, response);
   const { event, session } = await request.json();
 
   if (event === "SIGNED_OUT") {
     await supabase.auth.signOut();
-    return NextResponse.json({ success: true });
+    return response;
   }
 
   if (session) {
     await supabase.auth.setSession(session);
   }
 
-  return NextResponse.json({ success: true });
+  return response;
 }
