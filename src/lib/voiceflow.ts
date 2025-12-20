@@ -14,9 +14,14 @@ type VoiceflowAction =
   | { type: "text"; payload: string }
   | { type: "launch" };
 
-function getVoiceflowConfig() {
-  const apiKey = process.env.VOICEFLOW_API_KEY;
-  const versionId = process.env.VOICEFLOW_VERSION_ID;
+type VoiceflowConfig = {
+  apiKey?: string;
+  versionId?: string;
+};
+
+function getVoiceflowConfig(override?: VoiceflowConfig) {
+  const apiKey = override?.apiKey || process.env.VOICEFLOW_API_KEY;
+  const versionId = override?.versionId || process.env.VOICEFLOW_VERSION_ID;
 
   if (!apiKey || !versionId) {
     throw new Error(
@@ -38,9 +43,10 @@ function extractText(traces: VoiceflowTrace[]) {
 
 export async function sendToVoiceflow(
   sessionId: string,
-  action: VoiceflowAction
+  action: VoiceflowAction,
+  config?: VoiceflowConfig
 ): Promise<VoiceflowResult> {
-  const { apiKey, versionId } = getVoiceflowConfig();
+  const { apiKey, versionId } = getVoiceflowConfig(config);
 
   const response = await fetch(
     `https://general-runtime.voiceflow.com/state/user/${encodeURIComponent(

@@ -7,6 +7,7 @@ export async function POST(request: Request) {
     const sessionId = body.sessionId as string | undefined;
     const message = body.message as string | undefined;
     const action = body.action as "launch" | "text" | undefined;
+    const project = body.project as "viajard" | undefined;
 
     if (!sessionId) {
       return NextResponse.json(
@@ -15,10 +16,24 @@ export async function POST(request: Request) {
       );
     }
 
+    const config =
+      project === "viajard"
+        ? {
+            apiKey:
+              process.env.VOICEFLOW_VIAJARD_API_KEY ||
+              process.env.VOICEFLOW_API_KEY,
+            versionId: process.env.VOICEFLOW_VIAJARD_VERSION_ID,
+          }
+        : undefined;
+
     const result =
       action === "launch" || !message
-        ? await sendToVoiceflow(sessionId, { type: "launch" })
-        : await sendToVoiceflow(sessionId, { type: "text", payload: message });
+        ? await sendToVoiceflow(sessionId, { type: "launch" }, config)
+        : await sendToVoiceflow(
+            sessionId,
+            { type: "text", payload: message },
+            config
+          );
 
     return NextResponse.json({
       sessionId,

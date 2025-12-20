@@ -9,6 +9,7 @@ import { FixedSizeList as List, type ListChildComponentProps } from "react-windo
 import { memo, useCallback, useEffect, useMemo, useState } from "react";
 import type { CSSProperties } from "react";
 import { levelOneLessons } from "@/data/academyLessons";
+import { DashboardShell } from "@/components/DashboardShell";
 
 type CheckRecord = {
   id: string;
@@ -433,20 +434,23 @@ const shouldVirtualize = filteredChecks.length > 80;
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-black via-cyberBlue to-black text-white">
-      <div className="flex flex-col lg:flex-row">
-        <Sidebar copy={dashboardCopy.sidebar} />
-        <main className="flex-1 px-6 pt-16 pb-10 lg:px-10 lg:pt-12">
-          <header className="mt-4 flex flex-col gap-3">
-            <p className="text-sm text-zinc-400">{dashboardCopy.welcome}</p>
-            <h1 className="text-3xl font-semibold">{dashboardCopy.title}</h1>
+    <DashboardShell>
+      <button
+        onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+        className="fixed bottom-6 right-4 z-40 rounded-full border border-white/20 bg-black/70 px-5 py-3 text-sm font-semibold text-white shadow-lg backdrop-blur sm:hidden"
+      >
+        ↑ Volver arriba
+      </button>
+      <header className="sticky top-16 z-20 mt-4 flex flex-col gap-3 rounded-2xl border border-white/10 bg-black/70 p-4 backdrop-blur sm:static sm:border-transparent sm:bg-transparent sm:p-0">
+            <p className="text-sm text-zinc-300">{dashboardCopy.welcome}</p>
+            <h1 className="text-2xl font-semibold sm:text-3xl">{dashboardCopy.title}</h1>
             {planBadge && (
-              <span className="inline-flex items-center gap-2 w-fit rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs uppercase tracking-wide text-zinc-200">
+              <span className="inline-flex items-center gap-2 w-fit rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs uppercase tracking-wide text-zinc-100">
                 <span className="h-2 w-2 rounded-full bg-neonGreen" />
                 {formatTemplate(dashboardCopy.planLabel, {
                   plan: planBadge.plan,
                 })}
-                <span className="text-zinc-500 capitalize">
+                <span className="text-zinc-400 capitalize">
                   (
                   {formatTemplate(dashboardCopy.statusLabel, {
                     status: planBadge.status,
@@ -463,10 +467,10 @@ const shouldVirtualize = filteredChecks.length > 80;
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id as "overview" | "academy")}
-                  className={`rounded-full border px-4 py-1 text-sm transition ${
+                  className={`rounded-full border px-3 py-2 text-xs transition sm:px-4 sm:py-1 sm:text-sm ${
                     activeTab === tab.id
-                      ? "border-neonGreen bg-neonGreen text-white"
-                      : "border-white/10 text-zinc-300 hover:border-white/30"
+                      ? "border-neonGreen bg-neonGreen text-white shadow-[0_0_12px_rgba(57,255,20,0.25)]"
+                      : "border-white/10 text-zinc-200 hover:border-white/30"
                   }`}
                 >
                   {tab.label}
@@ -492,17 +496,18 @@ const shouldVirtualize = filteredChecks.length > 80;
                   {checksError}
                 </div>
               )}
-              <section className="mt-10 rounded-3xl border border-white/5 bg-white/5 p-6 backdrop-blur-xl">
-                <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+              <section className="mt-10 rounded-3xl border border-white/5 bg-white/5 p-4 backdrop-blur-xl sm:p-6">
+                <div className="sticky top-24 z-10 -mx-4 rounded-2xl border border-white/5 bg-black/60 px-4 py-4 backdrop-blur sm:static sm:m-0 sm:border-transparent sm:bg-transparent sm:p-0">
+                  <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                   <div className="flex flex-wrap gap-2">
                     {filterOptions.map((option) => (
                       <button
                         key={option.value}
                         onClick={() => setSelectedFilter(option.value)}
-                        className={`rounded-full px-4 py-1 text-sm transition ${
+                        className={`rounded-full border px-3 py-2 text-xs transition sm:px-4 sm:py-1 sm:text-sm ${
                           selectedFilter === option.value
-                            ? "bg-neonGreen text-white"
-                            : "bg-white/5 text-zinc-300 hover:bg-white/10"
+                            ? "border-neonGreen bg-neonGreen text-white shadow-[0_0_10px_rgba(57,255,20,0.2)]"
+                            : "border-white/10 bg-white/5 text-zinc-200 hover:bg-white/10"
                         }`}
                       >
                         {option.label}
@@ -514,12 +519,13 @@ const shouldVirtualize = filteredChecks.length > 80;
                       value={searchTerm}
                       onChange={(event) => setSearchTerm(event.target.value)}
                       placeholder={dashboardCopy.searchPlaceholder}
-                      className="w-full rounded-2xl border border-white/10 bg-black/40 px-4 py-2 text-sm outline-none placeholder:text-zinc-500"
+                      className="w-full rounded-2xl border border-white/10 bg-black/40 px-4 py-2 text-sm text-white outline-none placeholder:text-zinc-500"
                     />
                     <span className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-xs text-zinc-500">
                       ⌕
                     </span>
                   </div>
+                </div>
                 </div>
 
                 <div className="mt-6 overflow-hidden rounded-2xl border border-white/5">
@@ -529,6 +535,20 @@ const shouldVirtualize = filteredChecks.length > 80;
                     <span>{dashboardCopy.table.label}</span>
                     <span>{dashboardCopy.table.score}</span>
                     <span>{dashboardCopy.table.actions}</span>
+                  </div>
+                  <div className="flex flex-wrap gap-2 border-b border-white/5 bg-white/5 px-4 py-3 text-xs uppercase tracking-wide text-zinc-400 md:hidden">
+                    <span className="rounded-full border border-white/10 px-3 py-1 text-zinc-300">
+                      {dashboardCopy.table.date}
+                    </span>
+                    <span className="rounded-full border border-white/10 px-3 py-1 text-zinc-300">
+                      {dashboardCopy.table.source}
+                    </span>
+                    <span className="rounded-full border border-white/10 px-3 py-1 text-zinc-300">
+                      {dashboardCopy.table.label}
+                    </span>
+                    <span className="rounded-full border border-white/10 px-3 py-1 text-zinc-300">
+                      {dashboardCopy.table.score}
+                    </span>
                   </div>
                   {loadingChecks ? (
                     <SkeletonRows />
@@ -624,35 +644,35 @@ const shouldVirtualize = filteredChecks.length > 80;
                       <motion.div
                         key={stat.label}
                         whileHover={{ scale: 1.02 }}
-                        className={`rounded-[24px] border border-white/10 bg-gradient-to-br ${stat.accent} p-4`}
+                        className={`rounded-[24px] border border-white/10 bg-gradient-to-br ${stat.accent} p-3 sm:p-4`}
                       >
-                        <p className="text-xs uppercase tracking-wide text-zinc-400">
+                        <p className="text-[10px] uppercase tracking-wide text-zinc-400 sm:text-xs">
                           {stat.label}
                         </p>
-                        <p className="mt-2 text-3xl font-semibold text-white">
+                        <p className="mt-2 text-2xl font-semibold text-white sm:text-3xl">
                           {stat.value}
                         </p>
                       </motion.div>
                     ))}
                   </div>
 
-                  <div className="rounded-[28px] border border-white/10 bg-black/40 p-5">
-                    <div className="flex flex-wrap items-center justify-between gap-3">
-                      <div>
-                        <p className="text-xs uppercase tracking-wide text-neonGreen">
-                          {academyCopy.freePreview.eyebrow}
-                        </p>
-                        <h3 className="text-2xl font-semibold text-white">
-                          {activeModule?.title}
-                        </h3>
-                        <p className="mt-1 text-sm text-zinc-400">
-                          {activeModule?.summary}
-                        </p>
-                      </div>
-                      <button
-                        onClick={handleOpenLessonCard}
-                        disabled={lessonLoading || !canAccessAcademy}
-                        className="rounded-full bg-neonGreen px-4 py-2 text-sm font-semibold text-white transition hover:bg-neonGreen/90 disabled:opacity-60"
+                    <div className="rounded-[28px] border border-white/10 bg-black/40 p-4 sm:p-5">
+                      <div className="flex flex-wrap items-center justify-between gap-3">
+                        <div>
+                          <p className="text-xs uppercase tracking-wide text-neonGreen">
+                            {academyCopy.freePreview.eyebrow}
+                          </p>
+                          <h3 className="text-xl font-semibold text-white sm:text-2xl">
+                            {activeModule?.title}
+                          </h3>
+                          <p className="mt-1 text-xs text-zinc-400 sm:text-sm">
+                            {activeModule?.summary}
+                          </p>
+                        </div>
+                        <button
+                          onClick={handleOpenLessonCard}
+                          disabled={lessonLoading || !canAccessAcademy}
+                        className="rounded-full bg-neonGreen px-4 py-3 text-sm font-semibold text-white transition hover:bg-neonGreen/90 disabled:opacity-60 sm:px-4 sm:py-2"
                       >
                         {lessonLoading
                           ? academyCopy.actions.generating
@@ -670,7 +690,7 @@ const shouldVirtualize = filteredChecks.length > 80;
                           <button
                             key={module.id}
                             onClick={() => unlocked && setSelectedModuleId(module.id)}
-                            className={`rounded-full border px-4 py-1 text-xs font-semibold transition ${
+                            className={`rounded-full border px-3 py-2 text-xs font-semibold transition sm:px-4 sm:py-1 ${
                               active
                                 ? "border-neonGreen bg-neonGreen/20 text-neonGreen"
                                 : unlocked
@@ -687,16 +707,16 @@ const shouldVirtualize = filteredChecks.length > 80;
                   </div>
 
                   <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
-                    <div className="rounded-[28px] border border-white/10 bg-black/35 p-5">
+                    <div className="rounded-[28px] border border-white/10 bg-black/35 p-4 sm:p-5">
                       <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
                         <div>
                           <p className="text-xs uppercase tracking-wide text-zinc-500">
                             Level 1 · Skill path
                           </p>
-                          <h3 className="text-xl font-semibold text-white">
+                          <h3 className="text-lg font-semibold text-white sm:text-xl">
                             Mission deck
                           </h3>
-                          <p className="text-sm text-zinc-400">
+                          <p className="text-xs text-zinc-400 sm:text-sm">
                             Completa lecciones para avanzar como en Duolingo: XP, medallas y streaks.
                           </p>
                         </div>
@@ -721,7 +741,7 @@ const shouldVirtualize = filteredChecks.length > 80;
                               whileHover={isUnlocked ? { scale: 1.02 } : undefined}
                               whileTap={isUnlocked ? { scale: 0.98 } : undefined}
                               onClick={() => isUnlocked && handleSelectLesson(lesson.id)}
-                              className={`w-full rounded-2xl border px-4 py-3 text-left transition sm:w-[calc(50%-0.75rem)] ${
+                              className={`w-full rounded-2xl border px-4 py-4 text-left transition sm:w-[calc(50%-0.75rem)] sm:px-4 sm:py-3 ${
                                 isActive
                                   ? "border-neonGreen bg-neonGreen/10 text-white shadow-[0_8px_20px_rgba(34,197,94,0.2)]"
                                   : isUnlocked
@@ -730,14 +750,16 @@ const shouldVirtualize = filteredChecks.length > 80;
                               }`}
                               disabled={!isUnlocked}
                             >
-                              <p className="text-xs uppercase tracking-wide text-zinc-500 flex items-center gap-2">
+                              <p className="text-[10px] uppercase tracking-wide text-zinc-500 flex items-center gap-2 sm:text-xs">
                                 {lesson.tag}
                                 {isCompleted && (
                                   <span className="text-neonGreen text-sm">★</span>
                                 )}
                                 {!isUnlocked && <span className="text-zinc-500">🔒</span>}
                               </p>
-                              <p className="mt-1 text-sm font-semibold">{lesson.title}</p>
+                              <p className="mt-1 text-sm font-semibold sm:text-sm">
+                                {lesson.title}
+                              </p>
                             </motion.button>
                           );
                         })}
@@ -749,7 +771,7 @@ const shouldVirtualize = filteredChecks.length > 80;
                             <p className="text-sm text-zinc-200">
                               {activeLesson.summary}
                             </p>
-                            <div className="flex flex-wrap gap-2 text-xs text-zinc-300">
+                            <div className="flex flex-wrap gap-2 text-[10px] text-zinc-300 sm:text-xs">
                               {activeLesson.objectives.map((objective) => (
                                 <span
                                   key={objective}
@@ -809,7 +831,7 @@ const shouldVirtualize = filteredChecks.length > 80;
                                                 option
                                               )
                                             }
-                                            className={`w-full rounded-full border px-3 py-1 text-left transition ${
+                                            className={`w-full rounded-full border px-3 py-2 text-left text-sm transition sm:px-3 sm:py-1 sm:text-xs ${
                                               isWinning
                                                 ? "border-neonGreen bg-neonGreen/10 text-neonGreen"
                                                 : isLosing
@@ -920,8 +942,6 @@ const shouldVirtualize = filteredChecks.length > 80;
               )}
             </section>
           )}
-        </main>
-      </div>
       <DetailsModal
         check={selectedCheck}
         onClose={() => setSelectedCheck(null)}
@@ -933,50 +953,9 @@ const shouldVirtualize = filteredChecks.length > 80;
         isOpen={lessonOpen}
         onClose={() => setLessonOpen(false)}
       />
-    </div>
+    </DashboardShell>
   );
 }
-
-const Sidebar = memo(function Sidebar({
-  copy,
-}: {
-  copy: DashboardCopy["sidebar"];
-}) {
-  return (
-    <aside className="border-b border-white/10 bg-black/30 px-6 pt-32 pb-8 backdrop-blur md:px-8 md:pt-24 lg:min-h-screen lg:w-72 lg:border-r lg:pt-16">
-      <div className="flex flex-col items-start gap-3 text-center sm:flex-row sm:items-center sm:text-left">
-        <div className="h-10 w-10 rounded-2xl bg-neonGreen/10 text-neonGreen flex items-center justify-center font-black mx-auto sm:mx-0">
-          IA
-        </div>
-        <div>
-          <p className="text-sm uppercase tracking-widest text-zinc-400">
-            {copy.brand}
-          </p>
-          <p className="text-lg font-semibold">{copy.title}</p>
-        </div>
-      </div>
-
-      <nav className="mt-10 space-y-2 text-sm font-medium text-zinc-400">
-        {[
-          { label: copy.nav.dashboard, href: "/dashboard" },
-          { label: copy.nav.history, href: "/dashboard/history" },
-          { label: copy.nav.settings, href: "/dashboard/settings" },
-          { label: "ViajaRD", href: "/dashboard/viajard" },
-          { label: copy.nav.logout, href: "/logout" },
-        ].map((item) => (
-          <a
-            key={item.label}
-            href={item.href}
-            className="flex items-center justify-between rounded-2xl border border-transparent px-4 py-2 transition hover:border-white/10 hover:text-white"
-          >
-            <span>{item.label}</span>
-            <span className="text-xs text-zinc-600">›</span>
-          </a>
-        ))}
-      </nav>
-    </aside>
-  );
-});
 
 const StatCard = memo(function StatCard({
   label,
@@ -989,11 +968,13 @@ const StatCard = memo(function StatCard({
 }) {
   return (
     <div className="rounded-3xl border border-white/10 bg-white/5 p-4 backdrop-blur">
-      <p className="text-xs uppercase tracking-wide text-zinc-500">{label}</p>
+      <p className="text-xs uppercase tracking-wide text-zinc-400">{label}</p>
       {loading ? (
         <div className="mt-4 h-6 w-24 animate-pulse rounded-full bg-white/10" />
       ) : (
-        <p className="mt-3 text-3xl font-semibold text-white">{value}</p>
+        <p className="mt-3 text-2xl font-semibold text-white sm:text-3xl">
+          {value}
+        </p>
       )}
     </div>
   );
@@ -1022,7 +1003,7 @@ const CheckRowItem = memo(function CheckRowItem({
   return (
     <div
       style={style}
-      className="grid cursor-pointer grid-cols-1 gap-4 px-4 py-4 text-sm transition hover:bg-white/5 md:grid-cols-[140px_1fr_150px_200px_120px] md:items-center"
+      className="grid cursor-pointer grid-cols-1 gap-4 rounded-2xl border border-white/10 bg-black/30 px-4 py-4 text-base transition hover:bg-white/5 sm:text-sm md:grid-cols-[140px_1fr_150px_200px_120px] md:items-center md:rounded-none md:border-transparent md:bg-transparent"
       onClick={() => onRowClick(check)}
     >
       <span className="text-zinc-400">
@@ -1202,7 +1183,7 @@ function DetailsModal({
             initial={{ scale: 0.95, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.95, opacity: 0 }}
-            className="relative w-full max-w-2xl rounded-3xl border border-white/10 bg-zinc-950 p-6"
+            className="relative w-full max-w-2xl max-h-[85vh] overflow-y-auto rounded-3xl border border-white/10 bg-zinc-950 p-6"
           >
             <button
               onClick={onClose}
@@ -1279,7 +1260,7 @@ function LessonModal({
             initial={{ scale: 0.95, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.95, opacity: 0 }}
-            className="relative w-full max-w-3xl rounded-3xl border border-white/10 bg-zinc-950 p-6"
+            className="relative w-full max-w-3xl max-h-[85vh] overflow-y-auto rounded-3xl border border-white/10 bg-zinc-950 p-6"
           >
             <button
               onClick={onClose}
