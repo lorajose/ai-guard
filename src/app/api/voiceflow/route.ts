@@ -16,15 +16,24 @@ export async function POST(request: Request) {
       );
     }
 
-    const config =
-      project === "viajard"
-        ? {
-            apiKey:
-              process.env.VOICEFLOW_VIAJARD_API_KEY ||
-              process.env.VOICEFLOW_API_KEY,
-            versionId: process.env.VOICEFLOW_VIAJARD_VERSION_ID,
-          }
-        : undefined;
+    let config:
+      | {
+          apiKey: string;
+          versionId: string;
+        }
+      | undefined;
+
+    if (project === "viajard") {
+      const apiKey = process.env.VOICEFLOW_API_KEY;
+      const versionId = process.env.VOICEFLOW_VIAJARD_VERSION_ID;
+      if (!apiKey || !versionId) {
+        return NextResponse.json(
+          { error: "Missing Voiceflow ViajaRD configuration." },
+          { status: 500 }
+        );
+      }
+      config = { apiKey, versionId };
+    }
 
     const result =
       action === "launch" || !message
