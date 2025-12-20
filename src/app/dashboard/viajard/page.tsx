@@ -9,6 +9,7 @@ import {
 import { ViajaRDETicketForm } from "@/components/ViajaRDETicket";
 import { ViajaRDFlightLinks } from "@/components/ViajaRDFlightLinks";
 import { ViajaRDAssistant } from "@/components/ViajaRDAssistant";
+import { DashboardShell } from "@/components/DashboardShell";
 
 export default function ViajaRDScreen() {
   const [mode, setMode] = useState<"manual" | "assistant" | null>(null);
@@ -31,23 +32,40 @@ export default function ViajaRDScreen() {
   const [ticketPrefill, setTicketPrefill] = useState<Record<string, string>>({});
 
   return (
-    <div className="space-y-12">
+    <DashboardShell>
+      <div className="space-y-12">
+      {mode && (
+        <div className="flex items-center justify-between">
+          <button
+            onClick={() => {
+              setMode(null);
+              setAssistantComplete(false);
+            }}
+            className="rounded-full border border-white/10 bg-black/50 px-4 py-2 text-sm font-semibold text-white hover:border-white/30"
+          >
+            ← Volver
+          </button>
+          <p className="text-xs uppercase tracking-[0.3em] text-zinc-500">
+            ViajaRD
+          </p>
+        </div>
+      )}
       {!mode && (
-        <section className="rounded-[32px] border border-white/10 bg-gradient-to-b from-amber-200/20 via-orange-100/10 to-transparent p-8 text-white shadow-[0_30px_80px_rgba(0,0,0,0.35)]">
+        <section className="rounded-[32px] border border-white/10 bg-gradient-to-b from-amber-200/20 via-orange-100/10 to-transparent p-6 text-white shadow-[0_30px_80px_rgba(0,0,0,0.35)] sm:p-8">
           <p className="text-sm uppercase tracking-[0.4em] text-zinc-500">
             ViajaRD
           </p>
           <h1 className="mt-2 text-4xl font-black text-white">
             Viajar a República Dominicana
           </h1>
-          <p className="mt-2 text-lg text-zinc-400">
+          <p className="mt-2 text-lg text-zinc-300">
             Elige cómo quieres completar tu E‑Ticket y pasos de viaje.
           </p>
 
           <div className="mt-8 grid gap-4 md:grid-cols-2">
             <button
               onClick={() => setMode("manual")}
-              className="rounded-3xl border border-white/10 bg-black/50 p-6 text-left transition hover:border-white/30"
+              className="rounded-3xl border border-white/10 bg-black/70 p-6 text-left transition hover:border-white/30"
             >
               <p className="text-sm uppercase tracking-wide text-amber-200">
                 Modo manual
@@ -55,7 +73,7 @@ export default function ViajaRDScreen() {
               <h2 className="mt-2 text-2xl font-semibold text-white">
                 Completar paso a paso
               </h2>
-              <p className="mt-2 text-sm text-zinc-400">
+              <p className="mt-2 text-sm text-zinc-200">
                 Llenas cada sección con tus datos y documentos.
               </p>
               <span className="mt-4 inline-flex rounded-full bg-amber-500 px-4 py-2 text-sm font-semibold text-white">
@@ -65,7 +83,7 @@ export default function ViajaRDScreen() {
 
             <button
               onClick={() => setMode("assistant")}
-              className="rounded-3xl border border-neonGreen/40 bg-neonGreen/10 p-6 text-left transition hover:border-neonGreen/70"
+              className="rounded-3xl border border-neonGreen/50 bg-neonGreen/10 p-6 text-left transition hover:border-neonGreen/80"
             >
               <p className="text-sm uppercase tracking-wide text-neonGreen">
                 Asistente IA
@@ -73,7 +91,7 @@ export default function ViajaRDScreen() {
               <h2 className="mt-2 text-2xl font-semibold text-white">
                 Auto‑completar con IA
               </h2>
-              <p className="mt-2 text-sm text-zinc-300">
+              <p className="mt-2 text-sm text-zinc-100">
                 Chat inteligente que extrae datos de tus documentos.
               </p>
               <span className="mt-4 inline-flex rounded-full bg-neonGreen px-4 py-2 text-sm font-semibold text-white">
@@ -155,6 +173,7 @@ export default function ViajaRDScreen() {
           </div>
         </section>
       )}
-    </div>
+      </div>
+    </DashboardShell>
   );
 }

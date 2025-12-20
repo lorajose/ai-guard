@@ -104,6 +104,7 @@ export const en = {
       nav: {
         dashboard: "Dashboard",
         history: "History",
+        viajard: "ViajaRD",
         settings: "Settings",
         logout: "Logout",
       },
