@@ -110,6 +110,7 @@ export function ViajaRDAssistant({
   const [loading, setLoading] = useState(false);
   const [docStatus, setDocStatus] = useState("");
   const bottomRef = useRef<HTMLDivElement | null>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
     setSessionId(createSessionId());
@@ -207,6 +208,7 @@ export function ViajaRDAssistant({
           sessionId: `viajard:${sessionId}`,
           message: text,
           action,
+          project: "viajard",
         }),
       });
       const data = await res.json();
@@ -309,20 +311,25 @@ export function ViajaRDAssistant({
             Escríbeme o sube tu pasaporte/itinerario para rellenar los campos.
           </p>
         </div>
-        <label className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-semibold text-white hover:border-white/30">
-          Subir documento (JPG/PNG/PDF)
-          <input
-            type="file"
-            accept="image/*,application/pdf"
-            className="hidden"
-            onChange={(event) => {
-              const file = event.target.files?.[0];
-              if (file) {
-                void handleDocumentUpload(file);
-              }
-            }}
-          />
-        </label>
+        <button
+          type="button"
+          onClick={() => fileInputRef.current?.click()}
+          className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-semibold text-white hover:border-white/30"
+        >
+          Chat Inteligente · Extraer documentos
+        </button>
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*,application/pdf"
+          className="hidden"
+          onChange={(event) => {
+            const file = event.target.files?.[0];
+            if (file) {
+              void handleDocumentUpload(file);
+            }
+          }}
+        />
       </div>
 
       {docStatus && <p className="mt-2 text-sm text-zinc-300">{docStatus}</p>}
