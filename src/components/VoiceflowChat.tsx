@@ -162,7 +162,7 @@ export function VoiceflowChat() {
                 key={message.id}
                 className={`max-w-[85%] rounded-2xl px-4 py-3 text-sm ${
                   message.role === "user"
-                    ? "ml-auto bg-neonGreen text-black"
+                    ? "ml-auto bg-emerald-600 text-white"
                     : "bg-white/10 text-white"
                 }`}
               >
@@ -196,7 +196,7 @@ export function VoiceflowChat() {
           <button
             type="submit"
             disabled={!canSend}
-            className="rounded-2xl bg-neonGreen px-6 py-3 text-lg font-semibold text-black disabled:opacity-40"
+            className="rounded-2xl bg-neonGreen px-6 py-3 text-lg font-semibold text-white disabled:opacity-40"
           >
             Enviar
           </button>
@@ -235,7 +235,7 @@ export function VoiceflowChat() {
           />
           <button
             onClick={submitLead}
-            className="w-full rounded-2xl bg-neonGreen px-6 py-3 text-lg font-semibold text-black"
+            className="w-full rounded-2xl bg-neonGreen px-6 py-3 text-lg font-semibold text-white"
           >
             Enviar mis datos
           </button>

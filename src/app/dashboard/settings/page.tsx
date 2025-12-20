@@ -104,7 +104,7 @@ export default function SettingsPage() {
               <button
                 onClick={handleManagePortal}
                 disabled={portalLoading}
-                className="rounded-2xl bg-neonGreen px-6 py-3 text-sm font-semibold text-black transition hover:bg-lime-300 disabled:opacity-60"
+                className="rounded-2xl bg-neonGreen px-6 py-3 text-sm font-semibold text-white transition hover:bg-neonGreen/90 disabled:opacity-60"
               >
                 {portalLoading ? "Abriendo portal..." : "Manage Subscription"}
               </button>

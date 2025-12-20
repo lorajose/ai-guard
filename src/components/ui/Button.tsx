@@ -7,7 +7,7 @@ type ButtonSize = "sm" | "md" | "lg";
 
 const variantMap: Record<ButtonVariant, string> = {
   primary:
-    "bg-gradient-to-r from-neonGreen to-emerald-300 text-black shadow-[0_0_20px_rgba(57,255,20,0.3)]",
+    "bg-gradient-to-r from-neonGreen to-emerald-300 text-white shadow-[0_0_20px_rgba(57,255,20,0.3)]",
   secondary:
     "border border-white/20 bg-transparent text-white hover:border-white/40",
   danger: "bg-red-600 text-white hover:bg-red-500",
@@ -45,7 +45,7 @@ export function Button({
       )}
     >
       {loading && (
-        <span className="mr-2 inline-flex h-4 w-4 animate-spin rounded-full border-2 border-black/40 border-t-black" />
+        <span className="mr-2 inline-flex h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white" />
       )}
       <span className="relative">{children}</span>
     </button>

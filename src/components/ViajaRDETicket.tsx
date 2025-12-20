@@ -155,7 +155,7 @@ export function ViajaRDETicketForm() {
               key={code}
               onClick={() => setLocale(code)}
               className={`rounded-full px-4 py-2 text-lg font-semibold ${
-                locale === code ? "bg-neonGreen text-black" : "bg-white/10 text-white"
+                locale === code ? "bg-neonGreen text-white" : "bg-white/10 text-white"
               }`}
             >
               {code.toUpperCase()}
@@ -231,7 +231,7 @@ export function ViajaRDETicketForm() {
                 ))}
                 <button
                   onClick={handleSubmit}
-                  className="w-full rounded-2xl bg-neonGreen px-6 py-4 text-2xl font-semibold text-black"
+                  className="w-full rounded-2xl bg-neonGreen px-6 py-4 text-2xl font-semibold text-white"
                 >
                   {locale === "es" ? "Enviar formulario" : "Submit form"}
                 </button>
@@ -331,7 +331,7 @@ export function ViajaRDETicketForm() {
             <button
               onClick={goNext}
               disabled={!canProceed}
-              className="flex-1 rounded-2xl bg-neonGreen px-4 py-4 text-2xl font-semibold text-black disabled:opacity-40"
+              className="flex-1 rounded-2xl bg-neonGreen px-4 py-4 text-2xl font-semibold text-white disabled:opacity-40"
             >
               {locale === "es" ? "Siguiente" : "Next"} ▶
             </button>
@@ -379,7 +379,7 @@ export function ViajaRDETicketForm() {
               </div>
               <button
                 onClick={() => setShowHelp(false)}
-                className="mt-4 w-full rounded-2xl bg-neonGreen px-4 py-3 text-xl font-semibold text-black"
+                className="mt-4 w-full rounded-2xl bg-neonGreen px-4 py-3 text-xl font-semibold text-white"
               >
                 {locale === "es" ? "Entendido" : "Got it"}
               </button>

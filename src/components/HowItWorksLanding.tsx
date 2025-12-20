@@ -48,7 +48,7 @@ function Hero({
       <div className="mt-8 flex flex-wrap items-center gap-4">
         <Link
           href="/shield"
-          className="inline-flex items-center gap-2 rounded-2xl bg-neonGreen px-6 py-3 text-sm font-semibold text-black transition hover:bg-lime-300"
+          className="inline-flex items-center gap-2 rounded-2xl bg-neonGreen px-6 py-3 text-sm font-semibold text-white transition hover:bg-neonGreen/90"
         >
           {copy.primaryCta}
           <ArrowRight className="h-4 w-4" />
@@ -166,7 +166,7 @@ function CallToAction({
       <div className="mt-8 flex flex-wrap justify-center gap-4">
         <Link
           href="/dashboard"
-          className="inline-flex items-center gap-2 rounded-2xl bg-neonGreen px-6 py-3 text-sm font-semibold text-black transition hover:bg-lime-300"
+          className="inline-flex items-center gap-2 rounded-2xl bg-neonGreen px-6 py-3 text-sm font-semibold text-white transition hover:bg-neonGreen/90"
         >
           {cta.primary}
           <ArrowRight className="h-4 w-4" />

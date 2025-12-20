@@ -79,7 +79,7 @@ export default function ResetPasswordPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full rounded-2xl bg-neonGreen px-6 py-3 font-semibold text-black transition hover:bg-lime-300 disabled:opacity-50"
+            className="w-full rounded-2xl bg-neonGreen px-6 py-3 font-semibold text-white transition hover:bg-neonGreen/90 disabled:opacity-50"
           >
             {loading ? "Enviando..." : "Enviar instrucciones"}
           </button>
