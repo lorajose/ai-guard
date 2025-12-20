@@ -101,7 +101,7 @@ export function ViajaRDFlightLinks() {
               onClick={() => setLocale(codeLang)}
               className={`rounded-full px-4 py-2 text-lg font-semibold ${
                 locale === codeLang
-                  ? "bg-neonGreen text-black"
+                  ? "bg-neonGreen text-white"
                   : "bg-white/10 text-white"
               }`}
             >
@@ -126,7 +126,7 @@ export function ViajaRDFlightLinks() {
           <button
             onClick={handleLinkFlight}
             disabled={!isCodeValid}
-            className="mt-5 w-full rounded-2xl bg-neonGreen px-4 py-4 text-2xl font-semibold text-black disabled:opacity-40"
+            className="mt-5 w-full rounded-2xl bg-neonGreen px-4 py-4 text-2xl font-semibold text-white disabled:opacity-40"
           >
             {copy.attach[locale]}
           </button>

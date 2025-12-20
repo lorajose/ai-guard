@@ -465,7 +465,7 @@ const shouldVirtualize = filteredChecks.length > 80;
                   onClick={() => setActiveTab(tab.id as "overview" | "academy")}
                   className={`rounded-full border px-4 py-1 text-sm transition ${
                     activeTab === tab.id
-                      ? "border-neonGreen bg-neonGreen text-black"
+                      ? "border-neonGreen bg-neonGreen text-white"
                       : "border-white/10 text-zinc-300 hover:border-white/30"
                   }`}
                 >
@@ -501,7 +501,7 @@ const shouldVirtualize = filteredChecks.length > 80;
                         onClick={() => setSelectedFilter(option.value)}
                         className={`rounded-full px-4 py-1 text-sm transition ${
                           selectedFilter === option.value
-                            ? "bg-neonGreen text-black"
+                            ? "bg-neonGreen text-white"
                             : "bg-white/5 text-zinc-300 hover:bg-white/10"
                         }`}
                       >
@@ -652,7 +652,7 @@ const shouldVirtualize = filteredChecks.length > 80;
                       <button
                         onClick={handleOpenLessonCard}
                         disabled={lessonLoading || !canAccessAcademy}
-                        className="rounded-full bg-neonGreen px-4 py-2 text-sm font-semibold text-black transition hover:bg-neonGreen/90 disabled:opacity-60"
+                        className="rounded-full bg-neonGreen px-4 py-2 text-sm font-semibold text-white transition hover:bg-neonGreen/90 disabled:opacity-60"
                       >
                         {lessonLoading
                           ? academyCopy.actions.generating
