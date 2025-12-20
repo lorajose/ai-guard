@@ -135,13 +135,26 @@ export function VoiceflowChat() {
     }, 60_000);
   }, [lastUserMessage]);
 
+  function normalizePhone(raw: string) {
+    const digits = raw.replace(/[^\d+]/g, "");
+    const normalized = digits.startsWith("+") ? digits : digits.replace(/\D/g, "");
+    const numeric = normalized.replace(/\D/g, "");
+    if (numeric.length < 7 || numeric.length > 15) return "";
+    return normalized;
+  }
+
   function extractPhoneFromText(text: string) {
     const keywordMatch = text.match(
       /(telefono|teléfono|whatsapp|celular|cel|phone)\D+([+()\\d][\\d\\s().-]{6,}\\d)/i
     );
-    if (keywordMatch?.[2]) return keywordMatch[2];
-    const genericMatch = text.match(/([+()\\d][\\d\\s().-]{7,}\\d)/);
-    return genericMatch?.[1] || "";
+    if (keywordMatch?.[2]) {
+      return normalizePhone(keywordMatch[2]);
+    }
+    const genericMatch = text.match(/([+()\\d][\\d\\s().-]{6,}\\d)/);
+    if (genericMatch?.[1]) {
+      return normalizePhone(genericMatch[1]);
+    }
+    return "";
   }
 
   function extractNameFromMessages(userTexts: string[]) {
