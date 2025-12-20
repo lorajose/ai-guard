@@ -14,10 +14,10 @@ async function getSupabaseForRoute() {
           return cookieStore.get(name)?.value;
         },
         set(name, value, options) {
-          cookieStore.set(name, value, options);
+          cookieStore.set({ name, value, ...options });
         },
-        remove(name) {
-          cookieStore.delete(name);
+        remove(name, options) {
+          cookieStore.delete({ name, ...options });
         },
       },
     }
