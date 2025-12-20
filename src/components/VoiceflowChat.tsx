@@ -14,6 +14,30 @@ type LeadForm = {
   phone: string;
 };
 
+const END_KEYWORDS = [
+  "listo",
+  "gracias",
+  "terminar",
+  "bye",
+  "adios",
+  "adiós",
+  "finalizar",
+];
+
+type SpeechRecognitionEvent = {
+  results: Array<{ 0: { transcript: string } }>;
+};
+
+type SpeechRecognitionInstance = {
+  lang: string;
+  interimResults: boolean;
+  onresult: ((event: SpeechRecognitionEvent) => void) | null;
+  onerror: ((event: { error: string }) => void) | null;
+  onend: (() => void) | null;
+  start: () => void;
+  stop: () => void;
+};
+
 function createSessionId() {
   if (typeof window === "undefined") return "";
   const stored = window.localStorage.getItem("vf_session_id");
@@ -28,6 +52,8 @@ export function VoiceflowChat() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
+  const [listening, setListening] = useState(false);
+  const [ttsEnabled, setTtsEnabled] = useState(true);
   const [lead, setLead] = useState<LeadForm>({
     name: "",
     email: "",
@@ -35,6 +61,10 @@ export function VoiceflowChat() {
   });
   const [leadStatus, setLeadStatus] = useState("");
   const bottomRef = useRef<HTMLDivElement | null>(null);
+  const recognitionRef = useRef<SpeechRecognitionInstance | null>(null);
+  const lastSpokenId = useRef<string | null>(null);
+  const autoSavedRef = useRef(false);
+  const inactivityTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     setSessionId(createSessionId());
@@ -45,15 +75,154 @@ export function VoiceflowChat() {
   }, [messages, loading]);
 
   useEffect(() => {
+    if (typeof window === "undefined") return;
+    const Recognition =
+      (window as unknown as { SpeechRecognition?: new () => SpeechRecognitionInstance })
+        .SpeechRecognition ||
+      (window as unknown as { webkitSpeechRecognition?: new () => SpeechRecognitionInstance })
+        .webkitSpeechRecognition;
+
+    if (!Recognition) return;
+    const instance = new Recognition();
+    instance.lang = "es-ES";
+    instance.interimResults = false;
+    instance.onresult = (event) => {
+      const transcript = event.results?.[0]?.[0]?.transcript;
+      if (transcript) {
+        setInput((prev) => (prev ? `${prev} ${transcript}` : transcript));
+      }
+    };
+    instance.onerror = () => setListening(false);
+    instance.onend = () => setListening(false);
+    recognitionRef.current = instance;
+  }, []);
+
+  useEffect(() => {
     if (!sessionId || messages.length) return;
     void sendMessage("", "launch");
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sessionId]);
 
+  useEffect(() => {
+    if (!ttsEnabled || typeof window === "undefined") return;
+    const last = [...messages].reverse().find((msg) => msg.role === "assistant");
+    if (!last || last.id === lastSpokenId.current) return;
+    if (!("speechSynthesis" in window)) return;
+
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(last.text);
+    utterance.lang = "es-ES";
+    window.speechSynthesis.speak(utterance);
+    lastSpokenId.current = last.id;
+  }, [messages, ttsEnabled]);
+
   const canSend = useMemo(
     () => input.trim().length > 0 && !loading,
     [input, loading]
   );
+
+  const lastUserMessage = useMemo(() => {
+    return [...messages].reverse().find((msg) => msg.role === "user");
+  }, [messages]);
+
+  useEffect(() => {
+    if (!lastUserMessage) return;
+    if (inactivityTimerRef.current) {
+      clearTimeout(inactivityTimerRef.current);
+    }
+    inactivityTimerRef.current = setTimeout(() => {
+      void autoSaveLead("inactivity");
+    }, 60_000);
+  }, [lastUserMessage]);
+
+  function extractLeadFromMessages() {
+    const userTexts = messages
+      .filter((msg) => msg.role === "user")
+      .map((msg) => msg.text);
+
+    const fullText = userTexts.join(" ");
+    const emailMatch = fullText.match(
+      /[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i
+    );
+    const phoneMatch = fullText.match(
+      /(\+?\d[\d\s().-]{6,}\d)/
+    );
+    const nameMatch = fullText.match(
+      /(me llamo|soy|mi nombre es)\s+([A-Za-zÁÉÍÓÚÑáéíóúñ]+(?:\s+[A-Za-zÁÉÍÓÚÑáéíóúñ]+){0,3})/i
+    );
+
+    return {
+      name: nameMatch?.[2]?.trim() || "",
+      email: emailMatch?.[0]?.trim() || "",
+      phone: phoneMatch?.[1]?.trim() || "",
+    };
+  }
+
+  function hasEndKeyword(text: string) {
+    const normalized = text.toLowerCase();
+    return END_KEYWORDS.some((word) =>
+      new RegExp(`\\b${word}\\b`, "i").test(normalized)
+    );
+  }
+
+  function tracesIndicateEnd(traces: Array<{ type: string; payload?: { message?: string } }>) {
+    return traces.some((trace) => {
+      const type = trace.type?.toLowerCase?.() || "";
+      if (
+        type === "end" ||
+        type === "flow_end" ||
+        type === "session_end" ||
+        type === "exit" ||
+        type === "finish"
+      ) {
+        return true;
+      }
+      const message = trace.payload?.message || "";
+      return message.includes("[END]");
+    });
+  }
+
+  async function autoSaveLead(trigger: "keyword" | "inactivity" | "voiceflow_end") {
+    if (autoSavedRef.current) return;
+    const extracted = extractLeadFromMessages();
+    if (!extracted.name && !extracted.email && !extracted.phone) return;
+
+    autoSavedRef.current = true;
+    setLead((prev) => ({
+      name: extracted.name || prev.name,
+      email: extracted.email || prev.email,
+      phone: extracted.phone || prev.phone,
+    }));
+
+    try {
+      const res = await fetch("/api/leads", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ...extracted,
+          source: "web-chat-auto",
+          notes: `Auto-captura (${trigger}). Último mensaje: "${lastUserMessage?.text ?? ""}"`,
+          metadata: {
+            sessionId,
+            trigger,
+            conversation: messages.slice(-20),
+          },
+        }),
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || "No se pudo guardar el lead.");
+      }
+      setLeadStatus("Datos guardados automáticamente.");
+    } catch (error) {
+      autoSavedRef.current = false;
+      setLeadStatus(
+        error instanceof Error
+          ? error.message
+          : "No se pudo guardar el lead."
+      );
+    }
+  }
 
   async function sendMessage(text: string, action?: "launch") {
     setLoading(true);
@@ -86,6 +255,9 @@ export function VoiceflowChat() {
           { id: crypto.randomUUID(), role: "assistant", text: data.text },
         ]);
       }
+      if (data.traces && tracesIndicateEnd(data.traces)) {
+        void autoSaveLead("voiceflow_end");
+      }
     } catch (error) {
       setMessages((prev) => [
         ...prev,
@@ -101,6 +273,21 @@ export function VoiceflowChat() {
     } finally {
       setLoading(false);
     }
+  }
+
+  function toggleListening() {
+    const recognition = recognitionRef.current;
+    if (!recognition) {
+      setLeadStatus("Tu navegador no soporta reconocimiento de voz.");
+      return;
+    }
+    if (listening) {
+      recognition.stop();
+      setListening(false);
+      return;
+    }
+    setListening(true);
+    recognition.start();
   }
 
   async function submitLead() {
@@ -148,6 +335,14 @@ export function VoiceflowChat() {
               Pregunta sobre el PDF y obtén respuestas en segundos.
             </p>
           </div>
+          <div className="flex flex-col gap-2">
+            <button
+              onClick={() => setTtsEnabled((prev) => !prev)}
+              className="rounded-full border border-white/20 px-3 py-2 text-xs font-semibold text-white transition hover:border-white/40"
+            >
+              {ttsEnabled ? "🔊 Voz activada" : "🔇 Voz desactivada"}
+            </button>
+          </div>
         </div>
 
         <div className="mt-6 h-[420px] overflow-y-auto rounded-2xl border border-white/10 bg-black/60 p-4">
@@ -184,9 +379,23 @@ export function VoiceflowChat() {
             event.preventDefault();
             if (canSend) {
               void sendMessage(input.trim());
+              if (hasEndKeyword(input)) {
+                void autoSaveLead("keyword");
+              }
             }
           }}
         >
+          <button
+            type="button"
+            onClick={toggleListening}
+            className={`rounded-2xl px-4 py-3 text-lg font-semibold text-white transition ${
+              listening
+                ? "bg-red-500/80"
+                : "bg-white/10 hover:bg-white/20"
+            }`}
+          >
+            {listening ? "🎙️..." : "🎙️"}
+          </button>
           <input
             value={input}
             onChange={(event) => setInput(event.target.value)}
