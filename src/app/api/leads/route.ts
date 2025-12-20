@@ -27,7 +27,19 @@ function getSupabaseAdmin() {
 
 export async function POST(request: Request) {
   try {
-    const payload = (await request.json()) as LeadPayload;
+    const contentType = request.headers.get("content-type") || "";
+    let payload: LeadPayload = {};
+
+    if (contentType.includes("application/json")) {
+      payload = (await request.json()) as LeadPayload;
+    } else if (contentType.includes("application/x-www-form-urlencoded")) {
+      const text = await request.text();
+      payload = Object.fromEntries(new URLSearchParams(text)) as LeadPayload;
+    } else {
+      const formData = await request.formData();
+      payload = Object.fromEntries(formData.entries()) as LeadPayload;
+    }
+
     const supabaseAdmin = getSupabaseAdmin();
 
     const { error } = await supabaseAdmin.from("leads").insert({
