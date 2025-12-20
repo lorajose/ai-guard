@@ -135,6 +135,30 @@ export function VoiceflowChat() {
     }, 60_000);
   }, [lastUserMessage]);
 
+  function extractPhoneFromText(text: string) {
+    const keywordMatch = text.match(
+      /(telefono|teléfono|whatsapp|celular|cel|phone)\D+([+()\\d][\\d\\s().-]{6,}\\d)/i
+    );
+    if (keywordMatch?.[2]) return keywordMatch[2];
+    const genericMatch = text.match(/([+()\\d][\\d\\s().-]{7,}\\d)/);
+    return genericMatch?.[1] || "";
+  }
+
+  function extractNameFromMessages(userTexts: string[]) {
+    for (let i = userTexts.length - 1; i >= 0; i -= 1) {
+      const text = userTexts[i].trim();
+      const labeledMatch = text.match(
+        /(me llamo|soy|mi nombre es|nombre|name is)\s+([A-Za-zÁÉÍÓÚÑáéíóúñ]+(?:\s+[A-Za-zÁÉÍÓÚÑáéíóúñ]+){0,4})/i
+      );
+      if (labeledMatch?.[2]) return labeledMatch[2].trim();
+      const plainName =
+        /^[A-Za-zÁÉÍÓÚÑáéíóúñ]+(?:\s+[A-Za-zÁÉÍÓÚÑáéíóúñ]+){1,3}$/.test(text) &&
+        text.length <= 40;
+      if (plainName) return text;
+    }
+    return "";
+  }
+
   function extractLeadFromMessages() {
     const userTexts = messages
       .filter((msg) => msg.role === "user")
@@ -144,10 +168,8 @@ export function VoiceflowChat() {
     const emailMatch = fullText.match(
       /[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i
     );
-    const phoneMatch = fullText.match(/(\+?\d[\d\s().-]{7,}\d)/);
-    const nameMatch = fullText.match(
-      /(me llamo|soy|mi nombre es|nombre|name is)\s+([A-Za-zÁÉÍÓÚÑáéíóúñ]+(?:\s+[A-Za-zÁÉÍÓÚÑáéíóúñ]+){0,4})/i
-    );
+    const phoneMatch = extractPhoneFromText(fullText);
+    const nameMatch = extractNameFromMessages(userTexts);
     const emailName =
       emailMatch?.[0]
         ?.split("@")[0]
@@ -155,9 +177,9 @@ export function VoiceflowChat() {
         ?.trim() || "";
 
     return {
-      name: nameMatch?.[2]?.trim() || emailName,
+      name: nameMatch || emailName,
       email: emailMatch?.[0]?.trim() || "",
-      phone: phoneMatch?.[1]?.trim() || "",
+      phone: phoneMatch?.trim() || "",
     };
   }
 
