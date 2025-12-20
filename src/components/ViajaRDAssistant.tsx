@@ -17,6 +17,7 @@ type AssistantProps = {
   passports: ViajaRDPassportEntry[];
   onPassportsChange: (passports: ViajaRDPassportEntry[]) => void;
   onTicketPrefill: (prefill: ViajaRDTicketPrefill) => void;
+  onComplete: () => void;
 };
 
 function createSessionId() {
@@ -101,6 +102,7 @@ export function ViajaRDAssistant({
   passports,
   onPassportsChange,
   onTicketPrefill,
+  onComplete,
 }: AssistantProps) {
   const [sessionId, setSessionId] = useState("");
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -217,6 +219,24 @@ export function ViajaRDAssistant({
           ...prev,
           { id: crypto.randomUUID(), role: "assistant", text: data.text },
         ]);
+        if (data.text.includes("[END]")) {
+          onComplete();
+        }
+      }
+      if (data.traces && Array.isArray(data.traces)) {
+        const hasEnd = data.traces.some((trace: { type?: string }) => {
+          const type = trace.type?.toLowerCase?.() || "";
+          return (
+            type === "end" ||
+            type === "flow_end" ||
+            type === "session_end" ||
+            type === "exit" ||
+            type === "finish"
+          );
+        });
+        if (hasEnd) {
+          onComplete();
+        }
       }
     } catch (error) {
       setMessages((prev) => [
