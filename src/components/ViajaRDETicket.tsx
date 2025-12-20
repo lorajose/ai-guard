@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
 type Locale = "es" | "en";
@@ -66,12 +66,25 @@ const helpContent = {
   },
 };
 
-export function ViajaRDETicketForm() {
+type ViajaRDETicketFormProps = {
+  prefill?: Record<string, string>;
+};
+
+export function ViajaRDETicketForm({ prefill }: ViajaRDETicketFormProps) {
   const [locale, setLocale] = useState<Locale>("es");
   const [sectionIndex, setSectionIndex] = useState(0);
   const [form, setForm] = useState<Record<string, string>>({});
   const [showHelp, setShowHelp] = useState(false);
   const [needsFlight, setNeedsFlight] = useState(false);
+  const lastPrefillRef = useRef<string>("");
+
+  useEffect(() => {
+    if (!prefill) return;
+    const nextKey = JSON.stringify(prefill);
+    if (nextKey === lastPrefillRef.current) return;
+    lastPrefillRef.current = nextKey;
+    setForm((prev) => ({ ...prev, ...prefill }));
+  }, [prefill]);
 
   const trustedAirlines = [
     {

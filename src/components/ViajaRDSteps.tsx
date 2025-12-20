@@ -5,6 +5,28 @@ import { motion, AnimatePresence } from "framer-motion";
 
 type Locale = "es" | "en";
 
+export type ViajaRDFlightState = {
+  flightNumber: string;
+  flightDate: string;
+  needsFlight: boolean;
+};
+
+export type ViajaRDPassportEntry = {
+  id: number;
+  name: string;
+  mode: "manual" | "photo";
+  number: string;
+  expiry: string;
+  imageName: string;
+};
+
+type ViajaRDStepsProps = {
+  flight: ViajaRDFlightState;
+  onFlightChange: (flight: ViajaRDFlightState) => void;
+  passports: ViajaRDPassportEntry[];
+  onPassportsChange: (passports: ViajaRDPassportEntry[]) => void;
+};
+
 const translations = {
   heading: {
     es: "Viajar a República Dominicana",
@@ -155,34 +177,17 @@ const steps = [
   },
 ];
 
-export function ViajaRDSteps() {
+export function ViajaRDSteps({
+  flight,
+  onFlightChange,
+  passports,
+  onPassportsChange,
+}: ViajaRDStepsProps) {
   const [locale, setLocale] = useState<Locale>("es");
   const [currentStep, setCurrentStep] = useState(0);
   const [completed, setCompleted] = useState<boolean[]>(
     Array(steps.length).fill(false)
   );
-  const [flightNumber, setFlightNumber] = useState("");
-  const [flightDate, setFlightDate] = useState("");
-  const [needsFlight, setNeedsFlight] = useState(false);
-  const [passports, setPassports] = useState<
-    {
-      id: number;
-      name: string;
-      mode: "manual" | "photo";
-      number: string;
-      expiry: string;
-      imageName: string;
-    }[]
-  >([
-    {
-      id: 1,
-      name: "",
-      mode: "manual",
-      number: "",
-      expiry: "",
-      imageName: "",
-    },
-  ]);
 
   const trustedAirlines = [
     {
@@ -232,8 +237,8 @@ export function ViajaRDSteps() {
 
   const handleCompleteStep = () => {
     if (completed[currentStep]) return;
-    if (steps[currentStep].key === "flight" && !needsFlight) {
-      if (flightNumber.trim().length < 3 || !flightDate) return;
+    if (steps[currentStep].key === "flight" && !flight.needsFlight) {
+      if (flight.flightNumber.trim().length < 3 || !flight.flightDate) return;
     }
     if (steps[currentStep].key === "passport") {
       const allValid = passports.every((p) =>
@@ -372,8 +377,8 @@ export function ViajaRDSteps() {
                               <input
                                 value={p.name}
                                 onChange={(e) =>
-                                  setPassports((prev) =>
-                                    prev.map((item) =>
+                                  onPassportsChange(
+                                    passports.map((item) =>
                                       item.id === p.id ? { ...item, name: e.target.value } : item
                                     )
                                   )
@@ -385,8 +390,8 @@ export function ViajaRDSteps() {
                             <div className="flex flex-wrap gap-2 sm:col-span-2">
                               <button
                                 onClick={() =>
-                                  setPassports((prev) =>
-                                    prev.map((item) =>
+                                  onPassportsChange(
+                                    passports.map((item) =>
                                       item.id === p.id ? { ...item, mode: "manual" } : item
                                     )
                                   )
@@ -401,8 +406,8 @@ export function ViajaRDSteps() {
                               </button>
                               <button
                                 onClick={() =>
-                                  setPassports((prev) =>
-                                    prev.map((item) =>
+                                  onPassportsChange(
+                                    passports.map((item) =>
                                       item.id === p.id ? { ...item, mode: "photo" } : item
                                     )
                                   )
@@ -424,8 +429,8 @@ export function ViajaRDSteps() {
                                   <input
                                     value={p.number}
                                     onChange={(e) =>
-                                      setPassports((prev) =>
-                                        prev.map((item) =>
+                                      onPassportsChange(
+                                        passports.map((item) =>
                                           item.id === p.id ? { ...item, number: e.target.value } : item
                                         )
                                       )
@@ -440,8 +445,8 @@ export function ViajaRDSteps() {
                                     type="date"
                                     value={p.expiry}
                                     onChange={(e) =>
-                                      setPassports((prev) =>
-                                        prev.map((item) =>
+                                      onPassportsChange(
+                                        passports.map((item) =>
                                           item.id === p.id ? { ...item, expiry: e.target.value } : item
                                         )
                                       )
@@ -460,8 +465,8 @@ export function ViajaRDSteps() {
                                     capture="environment"
                                     onChange={(event) => {
                                       const file = event.target.files?.[0];
-                                      setPassports((prev) =>
-                                        prev.map((item) =>
+                                      onPassportsChange(
+                                        passports.map((item) =>
                                           item.id === p.id
                                             ? { ...item, imageName: file ? file.name : "" }
                                             : item
@@ -487,10 +492,10 @@ export function ViajaRDSteps() {
 
                       <button
                         onClick={() =>
-                          setPassports((prev) => [
-                            ...prev,
+                          onPassportsChange([
+                            ...passports,
                             {
-                              id: prev.length + 1,
+                              id: passports.length + 1,
                               name: "",
                               mode: "manual",
                               number: "",
@@ -511,8 +516,13 @@ export function ViajaRDSteps() {
                         <label className="text-sm text-amber-800">
                           {translations.actions.flightNumber[locale]}
                           <input
-                            value={flightNumber}
-                            onChange={(e) => setFlightNumber(e.target.value)}
+                            value={flight.flightNumber}
+                            onChange={(e) =>
+                              onFlightChange({
+                                ...flight,
+                                flightNumber: e.target.value,
+                              })
+                            }
                             className="mt-2 w-full rounded-xl border border-amber-200 bg-white px-3 py-2 text-amber-900 shadow-inner placeholder:text-amber-400 focus:border-orange-400 focus:outline-none"
                             placeholder="AA1234"
                           />
@@ -521,26 +531,36 @@ export function ViajaRDSteps() {
                           {translations.actions.flightDate[locale]}
                           <input
                             type="date"
-                            value={flightDate}
-                            onChange={(e) => setFlightDate(e.target.value)}
+                            value={flight.flightDate}
+                            onChange={(e) =>
+                              onFlightChange({
+                                ...flight,
+                                flightDate: e.target.value,
+                              })
+                            }
                             className="mt-2 w-full rounded-xl border border-amber-200 bg-white px-3 py-2 text-amber-900 shadow-inner focus:border-orange-400 focus:outline-none"
                           />
                         </label>
                       </div>
                       <div className="flex flex-wrap items-center gap-3">
                         <button
-                          onClick={() => setNeedsFlight((prev) => !prev)}
+                          onClick={() =>
+                            onFlightChange({
+                              ...flight,
+                              needsFlight: !flight.needsFlight,
+                            })
+                          }
                           className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
-                            needsFlight
+                            flight.needsFlight
                               ? "bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow"
                               : "bg-amber-600 text-white border border-amber-300"
                           }`}
                         >
-                          {needsFlight
+                          {flight.needsFlight
                             ? translations.actions.haveFlight[locale]
                             : translations.actions.needFlight[locale]}
                         </button>
-                        {needsFlight && (
+                        {flight.needsFlight && (
                           <div className="flex flex-wrap gap-2 text-sm text-amber-800">
                             {trustedAirlines.map((airline) => (
                               <a
