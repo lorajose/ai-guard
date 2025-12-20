@@ -53,7 +53,7 @@ export function VoiceflowChat() {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [listening, setListening] = useState(false);
-  const [ttsEnabled, setTtsEnabled] = useState(true);
+  const [ttsEnabled] = useState(true);
   const [lead, setLead] = useState<LeadForm>({
     name: "",
     email: "",
@@ -144,15 +144,18 @@ export function VoiceflowChat() {
     const emailMatch = fullText.match(
       /[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i
     );
-    const phoneMatch = fullText.match(
-      /(\+?\d[\d\s().-]{6,}\d)/
-    );
+    const phoneMatch = fullText.match(/(\+?\d[\d\s().-]{7,}\d)/);
     const nameMatch = fullText.match(
-      /(me llamo|soy|mi nombre es)\s+([A-Za-zÁÉÍÓÚÑáéíóúñ]+(?:\s+[A-Za-zÁÉÍÓÚÑáéíóúñ]+){0,3})/i
+      /(me llamo|soy|mi nombre es|nombre|name is)\s+([A-Za-zÁÉÍÓÚÑáéíóúñ]+(?:\s+[A-Za-zÁÉÍÓÚÑáéíóúñ]+){0,4})/i
     );
+    const emailName =
+      emailMatch?.[0]
+        ?.split("@")[0]
+        ?.replace(/[._-]+/g, " ")
+        ?.trim() || "";
 
     return {
-      name: nameMatch?.[2]?.trim() || "",
+      name: nameMatch?.[2]?.trim() || emailName,
       email: emailMatch?.[0]?.trim() || "",
       phone: phoneMatch?.[1]?.trim() || "",
     };
@@ -290,39 +293,9 @@ export function VoiceflowChat() {
     recognition.start();
   }
 
-  async function submitLead() {
-    setLeadStatus("");
-    if (!lead.name.trim() || !lead.phone.trim()) {
-      setLeadStatus("Completa nombre y telefono.");
-      return;
-    }
-    try {
-      const res = await fetch("/api/leads", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          ...lead,
-          source: "web-chat",
-        }),
-      });
-      if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.error || "No se pudo guardar el lead.");
-      }
-      setLeadStatus("Listo. Te contactaremos pronto.");
-      setLead({ name: "", email: "", phone: "" });
-    } catch (error) {
-      setLeadStatus(
-        error instanceof Error
-          ? error.message
-          : "No se pudo guardar el lead."
-      );
-    }
-  }
-
   return (
     <section className="mx-auto grid w-full max-w-5xl gap-6 lg:grid-cols-[1.5fr_1fr]">
-      <div className="rounded-3xl border border-white/10 bg-black/40 p-6 shadow-[0_20px_60px_rgba(0,0,0,0.45)]">
+      <div className="rounded-3xl border border-white/10 bg-black/40 p-6 shadow-[0_20px_60px_rgba(0,0,0,0.45)] lg:col-span-2">
         <div className="flex items-center justify-between">
           <div>
             <p className="text-sm uppercase tracking-[0.4em] text-zinc-500">
@@ -334,14 +307,6 @@ export function VoiceflowChat() {
             <p className="text-lg text-zinc-400">
               Pregunta sobre el PDF y obtén respuestas en segundos.
             </p>
-          </div>
-          <div className="flex flex-col gap-2">
-            <button
-              onClick={() => setTtsEnabled((prev) => !prev)}
-              className="rounded-full border border-white/20 px-3 py-2 text-xs font-semibold text-white transition hover:border-white/40"
-            >
-              {ttsEnabled ? "🔊 Voz activada" : "🔇 Voz desactivada"}
-            </button>
           </div>
         </div>
 
@@ -410,48 +375,9 @@ export function VoiceflowChat() {
             Enviar
           </button>
         </form>
-      </div>
-
-      <div className="rounded-3xl border border-white/10 bg-black/40 p-6 text-white shadow-[0_20px_60px_rgba(0,0,0,0.35)]">
-        <h3 className="text-2xl font-semibold">Captura de leads</h3>
-        <p className="mt-2 text-sm text-zinc-400">
-          Si necesitas un asesor humano, deja tus datos y te contactamos.
-        </p>
-        <div className="mt-4 space-y-3">
-          <input
-            value={lead.name}
-            onChange={(event) =>
-              setLead((prev) => ({ ...prev, name: event.target.value }))
-            }
-            placeholder="Nombre completo"
-            className="w-full rounded-2xl border border-white/15 bg-black/60 px-4 py-3 text-white placeholder:text-zinc-500 focus:border-neonGreen focus:outline-none"
-          />
-          <input
-            value={lead.email}
-            onChange={(event) =>
-              setLead((prev) => ({ ...prev, email: event.target.value }))
-            }
-            placeholder="Correo (opcional)"
-            className="w-full rounded-2xl border border-white/15 bg-black/60 px-4 py-3 text-white placeholder:text-zinc-500 focus:border-neonGreen focus:outline-none"
-          />
-          <input
-            value={lead.phone}
-            onChange={(event) =>
-              setLead((prev) => ({ ...prev, phone: event.target.value }))
-            }
-            placeholder="Telefono/WhatsApp"
-            className="w-full rounded-2xl border border-white/15 bg-black/60 px-4 py-3 text-white placeholder:text-zinc-500 focus:border-neonGreen focus:outline-none"
-          />
-          <button
-            onClick={submitLead}
-            className="w-full rounded-2xl bg-neonGreen px-6 py-3 text-lg font-semibold text-white"
-          >
-            Enviar mis datos
-          </button>
-          {leadStatus && (
-            <p className="text-sm text-zinc-300">{leadStatus}</p>
-          )}
-        </div>
+        {leadStatus && (
+          <p className="mt-3 text-sm text-zinc-400">{leadStatus}</p>
+        )}
       </div>
     </section>
   );
