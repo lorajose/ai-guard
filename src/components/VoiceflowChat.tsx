@@ -158,22 +158,38 @@ export function VoiceflowChat() {
   }
 
   function extractNameFromMessages(userTexts: string[]) {
-    for (let i = userTexts.length - 1; i >= 0; i -= 1) {
-      const text = userTexts[i].trim();
+    const candidates: string[] = [];
+    for (const raw of userTexts) {
+      const text = raw.trim();
       const labeledMatch = text.match(
         /(me llamo|soy|mi nombre es|nombre|name is)\s+([A-Za-zÁÉÍÓÚÑáéíóúñ]+(?:\s+[A-Za-zÁÉÍÓÚÑáéíóúñ]+){0,4})/i
       );
-      if (labeledMatch?.[2]) return labeledMatch[2].trim();
+      if (labeledMatch?.[2]) {
+        candidates.push(labeledMatch[2].trim());
+        continue;
+      }
       const plainName =
-        /^[A-Za-zÁÉÍÓÚÑáéíóúñ]+(?:\s+[A-Za-zÁÉÍÓÚÑáéíóúñ]+){1,3}$/.test(text) &&
+        /^[A-Za-zÁÉÍÓÚÑáéíóúñ]+(?:\s+[A-Za-zÁÉÍÓÚÑáéíóúñ]+){0,3}$/.test(text) &&
         text.length <= 40;
-      if (plainName) return text;
+      if (plainName) {
+        candidates.push(text);
+      }
     }
-    return "";
+
+    if (candidates.length >= 2) {
+      const last = candidates[candidates.length - 1];
+      const prev = candidates[candidates.length - 2];
+      if (prev.split(" ").length <= 2 && last.split(" ").length === 1) {
+        return `${prev} ${last}`.trim();
+      }
+    }
+
+    return candidates[candidates.length - 1] || "";
   }
 
-  function extractLeadFromMessages() {
-    const userTexts = messages
+  function extractLeadFromMessages(customMessages?: ChatMessage[]) {
+    const source = customMessages ?? messages;
+    const userTexts = source
       .filter((msg) => msg.role === "user")
       .map((msg) => msg.text);
 
@@ -220,10 +236,14 @@ export function VoiceflowChat() {
     });
   }
 
-  async function autoSaveLead(trigger: "keyword" | "inactivity" | "voiceflow_end") {
+  async function autoSaveLead(
+    trigger: "keyword" | "inactivity" | "voiceflow_end" | "auto_fields",
+    override?: { extracted?: LeadForm; messages?: ChatMessage[] }
+  ) {
     if (autoSavedRef.current) return;
-    const extracted = extractLeadFromMessages();
-    if (!extracted.name && !extracted.email && !extracted.phone) return;
+    const extracted =
+      override?.extracted || extractLeadFromMessages(override?.messages);
+    if (!extracted.phone) return;
 
     autoSavedRef.current = true;
     setLead((prev) => ({
@@ -265,10 +285,19 @@ export function VoiceflowChat() {
   async function sendMessage(text: string, action?: "launch") {
     setLoading(true);
     if (text) {
-      setMessages((prev) => [
-        ...prev,
-        { id: crypto.randomUUID(), role: "user", text },
-      ]);
+      const nextMessage = {
+        id: crypto.randomUUID(),
+        role: "user" as const,
+        text,
+      };
+      setMessages((prev) => {
+        const next = [...prev, nextMessage];
+        const extracted = extractLeadFromMessages(next);
+        if (extracted.phone || extracted.email || extracted.name) {
+          void autoSaveLead("auto_fields", { extracted, messages: next });
+        }
+        return next;
+      });
     }
     setInput("");
 
