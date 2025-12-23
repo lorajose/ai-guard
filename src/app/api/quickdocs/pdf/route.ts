@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { renderToBuffer } from "@react-pdf/renderer";
+import { createElement } from "react";
 import { ContractPdf, InvoicePdf, ProposalPdf } from "@/quickdocs/pdf";
 import type { ContractData, InvoiceData, ProposalData } from "@/quickdocs/types";
 
@@ -31,38 +32,32 @@ export async function POST(request: Request) {
     const showBranding = payload.showBranding ?? true;
     const watermark = payload.watermark ?? false;
 
-    let doc: JSX.Element | null = null;
+    let doc: ReturnType<typeof createElement> | null = null;
     let filename = "documento.pdf";
 
     switch (payload.type) {
       case "invoice":
-        doc = (
-          <InvoicePdf
-            data={payload.data}
-            showBranding={showBranding}
-            watermark={watermark}
-          />
-        );
+        doc = createElement(InvoicePdf, {
+          data: payload.data,
+          showBranding,
+          watermark,
+        });
         filename = `factura-${payload.data.invoice.number || "documento"}.pdf`;
         break;
       case "proposal":
-        doc = (
-          <ProposalPdf
-            data={payload.data}
-            showBranding={showBranding}
-            watermark={watermark}
-          />
-        );
+        doc = createElement(ProposalPdf, {
+          data: payload.data,
+          showBranding,
+          watermark,
+        });
         filename = "propuesta.pdf";
         break;
       case "contract":
-        doc = (
-          <ContractPdf
-            data={payload.data}
-            showBranding={showBranding}
-            watermark={watermark}
-          />
-        );
+        doc = createElement(ContractPdf, {
+          data: payload.data,
+          showBranding,
+          watermark,
+        });
         filename = "contrato.pdf";
         break;
       default:
