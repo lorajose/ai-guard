@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useLocale } from "@/contexts/LocaleProvider";
+import Image from "next/image";
 
 const copy = {
   es: {
@@ -15,16 +16,22 @@ const copy = {
         title: "Nueva regulación de datos en salud",
         body:
           "Qué cambió: 3 obligaciones inmediatas para clínicas privadas. Acción: actualiza tus consentimientos hoy.",
+        image: "/lexfocus/alert-1.svg",
+        alt: "Ilustración de alerta regulatoria",
       },
       {
         title: "Leyes de IA en Europa",
         body:
           "Qué cambió: requisitos de auditoría para proveedores. Acción: revisar modelos de alto riesgo.",
+        image: "/lexfocus/alert-2.svg",
+        alt: "Ilustración de cambios en leyes de IA",
       },
       {
         title: "Novedades en odontología láser",
         body:
           "Qué cambió: nuevo protocolo de calibración. Acción: ajustar equipos antes de fin de mes.",
+        image: "/lexfocus/alert-3.svg",
+        alt: "Ilustración de alerta técnica médica",
       },
     ],
     paywallTitle: "No pierdas el próximo cambio crítico.",
@@ -57,16 +64,22 @@ const copy = {
         title: "New health data regulation",
         body:
           "What changed: 3 immediate obligations for clinics. Action: update consents today.",
+        image: "/lexfocus/alert-1.svg",
+        alt: "Regulatory alert illustration",
       },
       {
         title: "EU AI compliance update",
         body:
           "What changed: audit requirements for providers. Action: review high‑risk models.",
+        image: "/lexfocus/alert-2.svg",
+        alt: "AI regulation update illustration",
       },
       {
         title: "Laser dentistry update",
         body:
           "What changed: new calibration protocol. Action: adjust equipment before month‑end.",
+        image: "/lexfocus/alert-3.svg",
+        alt: "Medical technology alert illustration",
       },
     ],
     paywallTitle: "Don't miss the next critical change.",
@@ -139,10 +152,21 @@ export default function AlertsPage() {
             {t.alerts.map((alert) => (
               <div
                 key={alert.title}
-                className="rounded-2xl border border-white/10 bg-black/60 p-4"
+                className="grid gap-4 rounded-2xl border border-white/10 bg-black/60 p-4 sm:grid-cols-[160px_1fr]"
               >
-                <p className="text-sm font-semibold">{alert.title}</p>
-                <p className="mt-2 text-sm text-zinc-300">{alert.body}</p>
+                <div className="overflow-hidden rounded-xl border border-white/10 bg-black/40">
+                  <Image
+                    src={alert.image}
+                    alt={alert.alt}
+                    width={320}
+                    height={200}
+                    className="h-full w-full object-cover"
+                  />
+                </div>
+                <div>
+                  <p className="text-sm font-semibold">{alert.title}</p>
+                  <p className="mt-2 text-sm text-zinc-300">{alert.body}</p>
+                </div>
               </div>
             ))}
           </div>

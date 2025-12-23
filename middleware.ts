@@ -36,10 +36,12 @@ export async function middleware(req: NextRequest) {
   } = await supabase.auth.getSession();
 
   const userId = session?.user?.id ?? null;
+  const superAdminId = process.env.SUPERADMIN_ID;
   const superAdminEmail = process.env.SUPERADMIN_EMAIL?.toLowerCase();
   const isSuperAdmin =
-    Boolean(superAdminEmail) &&
-    session?.user?.email?.toLowerCase() === superAdminEmail;
+    (Boolean(superAdminId) && session?.user?.id === superAdminId) ||
+    (Boolean(superAdminEmail) &&
+      session?.user?.email?.toLowerCase() === superAdminEmail);
   const isAuthenticated = Boolean(userId);
   const pathname = req.nextUrl.pathname;
   const isProtected = PROTECTED_PREFIXES.some((prefix) =>

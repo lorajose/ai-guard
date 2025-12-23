@@ -47,14 +47,32 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((event, session) => {
       setUser(session?.user ?? null);
-      fetch("/auth/callback", {
-        method: "POST",
-        credentials: "include",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ event, session }),
-      }).catch((error) => console.warn("Failed to sync auth session", error));
+      if (session?.access_token && session?.refresh_token) {
+        fetch("/api/auth/session", {
+          method: "POST",
+          credentials: "include",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            access_token: session.access_token,
+            refresh_token: session.refresh_token,
+          }),
+        }).catch((error) =>
+          console.warn("Failed to sync auth session", error)
+        );
+      } else {
+        fetch("/auth/callback", {
+          method: "POST",
+          credentials: "include",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ event, session }),
+        }).catch((error) =>
+          console.warn("Failed to sync auth session", error)
+        );
+      }
     });
 
     return () => {
@@ -73,11 +91,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
       const { data } = await supabase.auth.getSession();
       if (data.session) {
-        await fetch("/auth/callback", {
+        await fetch("/api/auth/session", {
           method: "POST",
           credentials: "include",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ event: "SIGNED_IN", session: data.session }),
+          body: JSON.stringify({
+            access_token: data.session.access_token,
+            refresh_token: data.session.refresh_token,
+          }),
         });
       }
       router.push("/dashboard");

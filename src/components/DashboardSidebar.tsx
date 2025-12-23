@@ -30,6 +30,7 @@ export function DashboardSidebar() {
           { label: copy.nav.chat, href: "/dashboard/chat" },
           { label: copy.nav.billing, href: "/dashboard/facturacion" },
           { label: copy.nav.trustsnap, href: "/dashboard/trustsnap" },
+          { label: copy.nav.quickdocs, href: "/dashboard/quickdocs" },
           { label: copy.nav.settings, href: "/dashboard/settings" },
           { label: copy.nav.logout, href: "/logout" },
         ].map((item) => (
