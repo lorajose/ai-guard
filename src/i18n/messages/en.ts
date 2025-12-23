@@ -108,6 +108,7 @@ export const en = {
         chat: "AI Chat",
         billing: "Billing",
         trustsnap: "TrustSnap",
+        quickdocs: "QuickDocs",
         settings: "Settings",
         logout: "Logout",
       },
