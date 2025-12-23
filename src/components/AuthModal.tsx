@@ -67,8 +67,7 @@ export default function AuthModal({ triggerText }: { triggerText: string }) {
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider,
         options: {
-          redirectTo: `${window.location.origin}/auth/callback`, // 👈 usamos una ruta dedicada
-          queryParams: { next: "/dashboard" }, // se guarda la intención del usuario
+          redirectTo: `${window.location.origin}/auth/callback?next=/dashboard`,
         },
       });
       if (error) throw error;

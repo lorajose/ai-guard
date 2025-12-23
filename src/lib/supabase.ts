@@ -1,3 +1,4 @@
+import { createBrowserClient } from "@supabase/ssr";
 import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -14,10 +15,10 @@ function assertSupabaseEnv() {
 
 export function createSupabaseBrowserClient() {
   const { url, key } = assertSupabaseEnv();
-  return createSupabaseClient(url, key, {
+  return createBrowserClient(url, key, {
     auth: {
-      persistSession: true,
       detectSessionInUrl: true,
+      flowType: "pkce",
     },
   });
 }
