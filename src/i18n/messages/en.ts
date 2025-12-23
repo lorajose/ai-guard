@@ -105,6 +105,9 @@ export const en = {
         dashboard: "Dashboard",
         history: "History",
         viajard: "ViajaRD",
+        chat: "AI Chat",
+        billing: "Billing",
+        trustsnap: "TrustSnap",
         settings: "Settings",
         logout: "Logout",
       },
@@ -213,6 +216,7 @@ export const en = {
   navbar: {
     public: {
       how: "How it works",
+      alerts: "LexFocus",
       pricing: "Pricing",
       faq: "FAQ",
       demo: "Watch demo",
