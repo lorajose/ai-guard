@@ -68,11 +68,13 @@ export default function Navbar() {
               {navbarCopy.public.demo}
             </a>
             <AuthModal triggerText={navbarCopy.public.authTrigger} />
+            <LanguageSwitcher />
           </nav>
 
           {/* Menú móvil */}
           <div className="md:hidden flex items-center gap-3 text-zinc-300">
             <AuthModal triggerText={navbarCopy.public.mobileTrigger} />
+            <LanguageSwitcher />
             <span className="cursor-pointer">☰</span>
           </div>
         </div>
