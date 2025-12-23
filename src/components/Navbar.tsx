@@ -52,6 +52,9 @@ export default function Navbar() {
             <a href="#how" className="hover:text-white transition">
               {navbarCopy.public.how}
             </a>
+            <Link href="/alerts" className="hover:text-white transition">
+              {navbarCopy.public.alerts}
+            </Link>
             <a href="#pricing" className="hover:text-white transition">
               {navbarCopy.public.pricing}
             </a>
@@ -90,9 +93,6 @@ export default function Navbar() {
       <div className="hidden md:flex items-center gap-6 text-sm text-zinc-300">
         <Link href="/dashboard" className="hover:text-white transition">
           {navbarCopy.private.dashboard}
-        </Link>
-        <Link href="/chat" className="hover:text-white transition">
-          Chat IA
         </Link>
         <Link href="/pricing" className="hover:text-white transition">
           {navbarCopy.private.pricing}
