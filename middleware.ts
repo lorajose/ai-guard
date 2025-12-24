@@ -62,6 +62,16 @@ export async function middleware(req: NextRequest) {
   }
 
   if (!isAuthenticated && isProtected) {
+    const hasAuthCookie = req.cookies
+      .getAll()
+      .some(
+        (cookie) =>
+          cookie.name.startsWith("sb-") &&
+          cookie.name.endsWith("-auth-token")
+      );
+    if (hasAuthCookie) {
+      return res;
+    }
     const redirectUrl = new URL("/login", req.url);
     redirectUrl.searchParams.set("redirectTo", pathname);
     return NextResponse.redirect(redirectUrl);
