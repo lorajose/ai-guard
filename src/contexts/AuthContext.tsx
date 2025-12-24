@@ -117,6 +117,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
       const { data } = await supabase.auth.getSession();
       if (data.session) {
+        const secure = window.location.protocol === "https:" ? "; Secure" : "";
+        document.cookie = `sb-access-token=${data.session.access_token}; Path=/; SameSite=Lax${secure}`;
+        document.cookie = `sb-refresh-token=${data.session.refresh_token}; Path=/; SameSite=Lax${secure}`;
         await fetch("/api/auth/session", {
           method: "POST",
           credentials: "include",

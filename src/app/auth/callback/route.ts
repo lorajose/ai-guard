@@ -58,6 +58,25 @@ export async function GET(request: Request) {
   if (code) {
     const supabase = createSupabaseForRoute(request, response);
     await supabase.auth.exchangeCodeForSession(code);
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+    if (session?.access_token) {
+      response.cookies.set({
+        name: "sb-access-token",
+        value: session.access_token,
+        path: "/",
+        sameSite: "lax",
+      });
+    }
+    if (session?.refresh_token) {
+      response.cookies.set({
+        name: "sb-refresh-token",
+        value: session.refresh_token,
+        path: "/",
+        sameSite: "lax",
+      });
+    }
   }
 
   return response;
