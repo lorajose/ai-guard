@@ -62,14 +62,15 @@ export async function middleware(req: NextRequest) {
   }
 
   if (!isAuthenticated && isProtected) {
-    const hasAuthCookie = req.cookies
-      .getAll()
-      .some(
-        (cookie) =>
-          cookie.name.startsWith("sb-") &&
-          cookie.name.includes("auth-token")
-      );
-    if (hasAuthCookie) {
+    const cookies = req.cookies.getAll();
+    const hasAuthCookie = cookies.some(
+      (cookie) =>
+        cookie.name.startsWith("sb-") && cookie.name.includes("auth-token")
+    );
+    const hasLegacyToken = cookies.some((cookie) =>
+      ["sb-access-token", "sb-refresh-token"].includes(cookie.name)
+    );
+    if (hasAuthCookie || hasLegacyToken) {
       return res;
     }
     const redirectUrl = new URL("/login", req.url);

@@ -39,6 +39,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         data: { session },
       } = await supabase.auth.getSession();
       setUser(session?.user ?? null);
+      if (session?.access_token) {
+        const secure = window.location.protocol === "https:" ? "; Secure" : "";
+        document.cookie = `sb-access-token=${session.access_token}; Path=/; SameSite=Lax${secure}`;
+      }
+      if (session?.refresh_token) {
+        const secure = window.location.protocol === "https:" ? "; Secure" : "";
+        document.cookie = `sb-refresh-token=${session.refresh_token}; Path=/; SameSite=Lax${secure}`;
+      }
       if (session?.access_token && session?.refresh_token) {
         fetch("/api/auth/session", {
           method: "POST",
@@ -63,6 +71,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } = supabase.auth.onAuthStateChange((event, session) => {
       setUser(session?.user ?? null);
       if (session?.access_token && session?.refresh_token) {
+        const secure = window.location.protocol === "https:" ? "; Secure" : "";
+        document.cookie = `sb-access-token=${session.access_token}; Path=/; SameSite=Lax${secure}`;
+        document.cookie = `sb-refresh-token=${session.refresh_token}; Path=/; SameSite=Lax${secure}`;
         fetch("/api/auth/session", {
           method: "POST",
           credentials: "include",
