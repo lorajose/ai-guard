@@ -32,6 +32,20 @@ export default function AuthModal({ triggerText }: { triggerText: string }) {
     if (error) {
       setMessage({ type: "error", text: error.message });
     } else {
+      const { data } = await supabase.auth.getSession();
+      if (data.session?.access_token && data.session?.refresh_token) {
+        await fetch("/api/auth/session", {
+          method: "POST",
+          credentials: "include",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            access_token: data.session.access_token,
+            refresh_token: data.session.refresh_token,
+          }),
+        });
+      }
       setMessage({
         type: "success",
         text: "✅ Login exitoso, redirigiendo...",
@@ -45,12 +59,25 @@ export default function AuthModal({ triggerText }: { triggerText: string }) {
     setLoading(true);
     setMessage(null);
 
-    const { error } = await supabase.auth.signUp({ email, password });
+    const { data, error } = await supabase.auth.signUp({ email, password });
     setLoading(false);
 
     if (error) {
       setMessage({ type: "error", text: error.message });
     } else {
+      if (data.session?.access_token && data.session?.refresh_token) {
+        await fetch("/api/auth/session", {
+          method: "POST",
+          credentials: "include",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            access_token: data.session.access_token,
+            refresh_token: data.session.refresh_token,
+          }),
+        });
+      }
       setMessage({
         type: "success",
         text: "📧 Revisa tu correo para confirmar la cuenta.",
