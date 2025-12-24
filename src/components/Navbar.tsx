@@ -49,24 +49,24 @@ export default function Navbar() {
 
           {/* Menú desktop */}
           <nav className="hidden md:flex items-center gap-6 text-sm text-zinc-300">
-            <a href="#how" className="hover:text-white transition">
+            <Link href="/#how" className="hover:text-white transition">
               {navbarCopy.public.how}
-            </a>
+            </Link>
             <Link href="/alerts" className="hover:text-white transition">
               {navbarCopy.public.alerts}
             </Link>
-            <a href="#pricing" className="hover:text-white transition">
+            <Link href="/#pricing" className="hover:text-white transition">
               {navbarCopy.public.pricing}
-            </a>
-            <a href="#faq" className="hover:text-white transition">
+            </Link>
+            <Link href="/#faq" className="hover:text-white transition">
               {navbarCopy.public.faq}
-            </a>
-            <a
-              href="#demo"
+            </Link>
+            <Link
+              href="/#demo"
               className="rounded-lg border border-zinc-700 px-3 py-1.5 hover:text-white hover:border-zinc-500 transition"
             >
               {navbarCopy.public.demo}
-            </a>
+            </Link>
             <AuthModal triggerText={navbarCopy.public.authTrigger} />
             <LanguageSwitcher />
           </nav>
