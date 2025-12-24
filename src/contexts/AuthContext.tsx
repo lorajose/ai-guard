@@ -165,6 +165,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signOut = useCallback(async () => {
     const redirectUrl = process.env.NEXT_PUBLIC_APP_URL || "/";
     await supabase.auth.signOut();
+    document.cookie = "sb-access-token=; Path=/; Max-Age=0; SameSite=Lax";
+    document.cookie = "sb-refresh-token=; Path=/; Max-Age=0; SameSite=Lax";
     window.location.href = redirectUrl;
   }, [supabase]);
 

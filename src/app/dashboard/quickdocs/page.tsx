@@ -115,6 +115,39 @@ export default function QuickDocsPage() {
         clientAddress: "Dirección del cliente",
         policy: "Política general (NY)",
         logo: "Logo (puedes cambiarlo)",
+        logoUpload: "Subir logo",
+        issuerName: "Tu nombre o marca",
+        issuerEmail: "Correo para cobrar",
+        issuerPhone: "Teléfono / WhatsApp",
+        issuerAddress: "Dirección comercial",
+        clientName: "Cliente que paga",
+        clientEmail: "Email del cliente",
+        dueDate: "Fecha límite",
+        addItem: "Agregar otro servicio",
+        removeItem: "Eliminar",
+      },
+      tabs: {
+        invoice: "Factura",
+        proposal: "Propuesta",
+        contract: "Contrato",
+      },
+      invoicePlaceholders: {
+        issuerName: "Tu nombre o marca (ej: Studio Rivera)",
+        issuerEmail: "Correo para cobrar (ej: hola@tuempresa.com)",
+        issuerPhone: "Teléfono / WhatsApp",
+        issuerAddress: "Dirección comercial (opcional)",
+        issuerLogoUrl: "Logo (URL)",
+        clientName: "Cliente que paga (ej: Carlos Pérez)",
+        clientEmail: "Email del cliente (para enviar la factura)",
+        clientPhone: "Teléfono del cliente",
+        clientAddress: "Dirección del cliente",
+        dueDate: "Fecha límite de pago",
+        itemDescription: "Qué entregaste (ej: Diseño de logo + 3 revisiones)",
+        itemQuantity: "Cantidad",
+        itemUnitPrice: "Precio por unidad (USD)",
+        taxPercent: "Impuesto (%)",
+        note: "Mensaje final (ej: Gracias por confiar en nosotros)",
+        policy: "Política general (NY)",
       },
     },
     en: {
@@ -158,6 +191,39 @@ export default function QuickDocsPage() {
         clientAddress: "Client address",
         policy: "General policy (NY)",
         logo: "Logo (you can replace it)",
+        logoUpload: "Upload logo",
+        issuerName: "Your name or brand",
+        issuerEmail: "Billing email",
+        issuerPhone: "Phone / WhatsApp",
+        issuerAddress: "Business address",
+        clientName: "Paying client",
+        clientEmail: "Client email",
+        dueDate: "Due date",
+        addItem: "Add another service",
+        removeItem: "Remove",
+      },
+      tabs: {
+        invoice: "Invoice",
+        proposal: "Proposal",
+        contract: "Contract",
+      },
+      invoicePlaceholders: {
+        issuerName: "Your name or brand (e.g. Studio Rivera)",
+        issuerEmail: "Billing email (e.g. hello@company.com)",
+        issuerPhone: "Phone / WhatsApp",
+        issuerAddress: "Business address (optional)",
+        issuerLogoUrl: "Logo (URL)",
+        clientName: "Paying client (e.g. Carlos Perez)",
+        clientEmail: "Client email (to send invoice)",
+        clientPhone: "Client phone",
+        clientAddress: "Client address",
+        dueDate: "Payment due date",
+        itemDescription: "What did you deliver (e.g. Logo design + 3 revisions)",
+        itemQuantity: "Quantity",
+        itemUnitPrice: "Unit price (USD)",
+        taxPercent: "Tax (%)",
+        note: "Final note (e.g. Thanks for your business)",
+        policy: "General policy (NY)",
       },
     },
   }[locale];
@@ -553,9 +619,9 @@ export default function QuickDocsPage() {
         <section className="rounded-3xl border border-white/10 bg-black/40 p-6 text-white">
           <div className="flex flex-wrap gap-2">
             {[
-              { id: "invoice", label: "Factura" },
-              { id: "proposal", label: "Propuesta" },
-              { id: "contract", label: "Contrato" },
+              { id: "invoice", label: labels.tabs.invoice },
+              { id: "proposal", label: labels.tabs.proposal },
+              { id: "contract", label: labels.tabs.contract },
             ].map((item) => (
               <button
                 key={item.id}
@@ -678,91 +744,161 @@ export default function QuickDocsPage() {
                   })}
                 </div>
               </div>
-              <input
-                value={invoice.issuerName}
-                onChange={(e) =>
-                  setInvoice((prev) => ({ ...prev, issuerName: e.target.value }))
-                }
-                placeholder="Tu nombre o marca (ej: Studio Rivera)"
-                className="rounded-2xl border border-white/10 bg-black/50 px-4 py-3 text-sm text-white placeholder:text-zinc-500"
-              />
-              <input
-                value={invoice.issuerEmail}
-                onChange={(e) =>
-                  setInvoice((prev) => ({ ...prev, issuerEmail: e.target.value }))
-                }
-                placeholder="Correo para cobrar (ej: hola@tuempresa.com)"
-                className="rounded-2xl border border-white/10 bg-black/50 px-4 py-3 text-sm text-white placeholder:text-zinc-500"
-              />
-              <input
-                value={invoice.issuerPhone}
-                onChange={(e) =>
-                  setInvoice((prev) => ({ ...prev, issuerPhone: e.target.value }))
-                }
-                placeholder="Teléfono / WhatsApp"
-                className="rounded-2xl border border-white/10 bg-black/50 px-4 py-3 text-sm text-white placeholder:text-zinc-500"
-              />
-              <input
-                value={invoice.issuerAddress}
-                onChange={(e) =>
-                  setInvoice((prev) => ({ ...prev, issuerAddress: e.target.value }))
-                }
-                placeholder="Dirección comercial (opcional)"
-                className="rounded-2xl border border-white/10 bg-black/50 px-4 py-3 text-sm text-white placeholder:text-zinc-500"
-              />
-              <input
-                value={invoice.issuerLogoUrl}
-                onChange={(e) =>
-                  setInvoice((prev) => ({ ...prev, issuerLogoUrl: e.target.value }))
-                }
-                placeholder="Logo (URL)"
-                className="rounded-2xl border border-white/10 bg-black/50 px-4 py-3 text-sm text-white placeholder:text-zinc-500"
-              />
-              <p className="text-xs text-zinc-500 md:col-span-2">
-                {labels.invoiceLabels.logo}
-              </p>
-              <input
-                value={invoice.clientName}
-                onChange={(e) =>
-                  setInvoice((prev) => ({ ...prev, clientName: e.target.value }))
-                }
-                placeholder="Cliente que paga (ej: Carlos Pérez)"
-                className="rounded-2xl border border-white/10 bg-black/50 px-4 py-3 text-sm text-white placeholder:text-zinc-500"
-              />
-              <input
-                value={invoice.clientEmail}
-                onChange={(e) =>
-                  setInvoice((prev) => ({ ...prev, clientEmail: e.target.value }))
-                }
-                placeholder="Email del cliente (para enviar la factura)"
-                className="rounded-2xl border border-white/10 bg-black/50 px-4 py-3 text-sm text-white placeholder:text-zinc-500"
-              />
-              <input
-                value={invoice.clientPhone}
-                onChange={(e) =>
-                  setInvoice((prev) => ({ ...prev, clientPhone: e.target.value }))
-                }
-                placeholder="Teléfono del cliente"
-                className="rounded-2xl border border-white/10 bg-black/50 px-4 py-3 text-sm text-white placeholder:text-zinc-500"
-              />
-              <input
-                value={invoice.clientAddress}
-                onChange={(e) =>
-                  setInvoice((prev) => ({ ...prev, clientAddress: e.target.value }))
-                }
-                placeholder="Dirección del cliente"
-                className="rounded-2xl border border-white/10 bg-black/50 px-4 py-3 text-sm text-white placeholder:text-zinc-500"
-              />
-              <p className="text-xs text-zinc-500">{labels.invoiceLabels.clientPhone}</p>
-              <p className="text-xs text-zinc-500">{labels.invoiceLabels.clientAddress}</p>
-              <input
-                type="date"
-                value={invoice.dueDate}
-                onChange={(e) =>
-                  setInvoice((prev) => ({ ...prev, dueDate: e.target.value }))
-                }
-                className="rounded-2xl border border-white/10 bg-black/50 px-4 py-3 text-sm text-white"
-              />
+              <div className="flex flex-col gap-2">
+                <label className="text-xs uppercase tracking-wide text-zinc-500">
+                  {labels.invoiceLabels.issuerName}
+                </label>
+                <input
+                  value={invoice.issuerName}
+                  onChange={(e) =>
+                    setInvoice((prev) => ({ ...prev, issuerName: e.target.value }))
+                  }
+                  placeholder={labels.invoicePlaceholders.issuerName}
+                  className="rounded-2xl border border-white/10 bg-black/50 px-4 py-3 text-sm text-white placeholder:text-zinc-500"
+                />
+              </div>
+              <div className="flex flex-col gap-2">
+                <label className="text-xs uppercase tracking-wide text-zinc-500">
+                  {labels.invoiceLabels.issuerEmail}
+                </label>
+                <input
+                  value={invoice.issuerEmail}
+                  onChange={(e) =>
+                    setInvoice((prev) => ({ ...prev, issuerEmail: e.target.value }))
+                  }
+                  placeholder={labels.invoicePlaceholders.issuerEmail}
+                  className="rounded-2xl border border-white/10 bg-black/50 px-4 py-3 text-sm text-white placeholder:text-zinc-500"
+                />
+              </div>
+              <div className="flex flex-col gap-2">
+                <label className="text-xs uppercase tracking-wide text-zinc-500">
+                  {labels.invoiceLabels.issuerPhone}
+                </label>
+                <input
+                  value={invoice.issuerPhone}
+                  onChange={(e) =>
+                    setInvoice((prev) => ({ ...prev, issuerPhone: e.target.value }))
+                  }
+                  placeholder={labels.invoicePlaceholders.issuerPhone}
+                  className="rounded-2xl border border-white/10 bg-black/50 px-4 py-3 text-sm text-white placeholder:text-zinc-500"
+                />
+              </div>
+              <div className="flex flex-col gap-2">
+                <label className="text-xs uppercase tracking-wide text-zinc-500">
+                  {labels.invoiceLabels.issuerAddress}
+                </label>
+                <input
+                  value={invoice.issuerAddress}
+                  onChange={(e) =>
+                    setInvoice((prev) => ({ ...prev, issuerAddress: e.target.value }))
+                  }
+                  placeholder={labels.invoicePlaceholders.issuerAddress}
+                  className="rounded-2xl border border-white/10 bg-black/50 px-4 py-3 text-sm text-white placeholder:text-zinc-500"
+                />
+              </div>
+              <div className="flex flex-col gap-2 md:col-span-2">
+                <label className="text-xs uppercase tracking-wide text-zinc-500">
+                  {labels.invoiceLabels.logo}
+                </label>
+                <div className="flex flex-col gap-3 md:flex-row md:items-center">
+                  <input
+                    value={invoice.issuerLogoUrl}
+                    onChange={(e) =>
+                      setInvoice((prev) => ({
+                        ...prev,
+                        issuerLogoUrl: e.target.value,
+                      }))
+                    }
+                    placeholder={labels.invoicePlaceholders.issuerLogoUrl}
+                    className="flex-1 rounded-2xl border border-white/10 bg-black/50 px-4 py-3 text-sm text-white placeholder:text-zinc-500"
+                  />
+                  <label className="inline-flex cursor-pointer items-center justify-center rounded-2xl border border-white/10 px-4 py-3 text-sm font-semibold text-white transition hover:border-white/30">
+                    {labels.invoiceLabels.logoUpload}
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (!file) return;
+                        const reader = new FileReader();
+                        reader.onload = () => {
+                          setInvoice((prev) => ({
+                            ...prev,
+                            issuerLogoUrl: String(reader.result || ""),
+                          }));
+                        };
+                        reader.readAsDataURL(file);
+                      }}
+                    />
+                  </label>
+                </div>
+              </div>
+              <div className="flex flex-col gap-2">
+                <label className="text-xs uppercase tracking-wide text-zinc-500">
+                  {labels.invoiceLabels.clientName}
+                </label>
+                <input
+                  value={invoice.clientName}
+                  onChange={(e) =>
+                    setInvoice((prev) => ({ ...prev, clientName: e.target.value }))
+                  }
+                  placeholder={labels.invoicePlaceholders.clientName}
+                  className="rounded-2xl border border-white/10 bg-black/50 px-4 py-3 text-sm text-white placeholder:text-zinc-500"
+                />
+              </div>
+              <div className="flex flex-col gap-2">
+                <label className="text-xs uppercase tracking-wide text-zinc-500">
+                  {labels.invoiceLabels.clientEmail}
+                </label>
+                <input
+                  value={invoice.clientEmail}
+                  onChange={(e) =>
+                    setInvoice((prev) => ({ ...prev, clientEmail: e.target.value }))
+                  }
+                  placeholder={labels.invoicePlaceholders.clientEmail}
+                  className="rounded-2xl border border-white/10 bg-black/50 px-4 py-3 text-sm text-white placeholder:text-zinc-500"
+                />
+              </div>
+              <div className="flex flex-col gap-2">
+                <label className="text-xs uppercase tracking-wide text-zinc-500">
+                  {labels.invoiceLabels.clientPhone}
+                </label>
+                <input
+                  value={invoice.clientPhone}
+                  onChange={(e) =>
+                    setInvoice((prev) => ({ ...prev, clientPhone: e.target.value }))
+                  }
+                  placeholder={labels.invoicePlaceholders.clientPhone}
+                  className="rounded-2xl border border-white/10 bg-black/50 px-4 py-3 text-sm text-white placeholder:text-zinc-500"
+                />
+              </div>
+              <div className="flex flex-col gap-2">
+                <label className="text-xs uppercase tracking-wide text-zinc-500">
+                  {labels.invoiceLabels.clientAddress}
+                </label>
+                <input
+                  value={invoice.clientAddress}
+                  onChange={(e) =>
+                    setInvoice((prev) => ({ ...prev, clientAddress: e.target.value }))
+                  }
+                  placeholder={labels.invoicePlaceholders.clientAddress}
+                  className="rounded-2xl border border-white/10 bg-black/50 px-4 py-3 text-sm text-white placeholder:text-zinc-500"
+                />
+              </div>
+              <div className="flex flex-col gap-2">
+                <label className="text-xs uppercase tracking-wide text-zinc-500">
+                  {labels.invoiceLabels.dueDate}
+                </label>
+                <input
+                  type="date"
+                  value={invoice.dueDate}
+                  onChange={(e) =>
+                    setInvoice((prev) => ({ ...prev, dueDate: e.target.value }))
+                  }
+                  className="rounded-2xl border border-white/10 bg-black/50 px-4 py-3 text-sm text-white"
+                />
+              </div>
               <div className="flex flex-col gap-3 md:col-span-2">
                 {invoice.items.map((item, index) => (
                   <div
@@ -781,7 +917,7 @@ export default function QuickDocsPage() {
                           ),
                         }))
                       }
-                      placeholder="Qué entregaste (ej: Diseño de logo + 3 revisiones)"
+                      placeholder={labels.invoicePlaceholders.itemDescription}
                       className="rounded-2xl border border-white/10 bg-black/50 px-4 py-3 text-sm text-white placeholder:text-zinc-500 md:col-span-3"
                     />
                     <input
@@ -797,7 +933,7 @@ export default function QuickDocsPage() {
                           ),
                         }))
                       }
-                      placeholder="Cantidad"
+                      placeholder={labels.invoicePlaceholders.itemQuantity}
                       className="rounded-2xl border border-white/10 bg-black/50 px-4 py-3 text-sm text-white"
                     />
                     <input
@@ -813,7 +949,7 @@ export default function QuickDocsPage() {
                           ),
                         }))
                       }
-                      placeholder="Precio por unidad (USD)"
+                      placeholder={labels.invoicePlaceholders.itemUnitPrice}
                       className="rounded-2xl border border-white/10 bg-black/50 px-4 py-3 text-sm text-white"
                     />
                     <div className="flex items-center justify-between md:col-span-3">
@@ -835,7 +971,7 @@ export default function QuickDocsPage() {
                         disabled={invoice.items.length === 1}
                         className="text-xs text-red-300 hover:text-red-200 disabled:opacity-40"
                       >
-                        Eliminar
+                        {labels.invoiceLabels.removeItem}
                       </button>
                     </div>
                   </div>
@@ -853,41 +989,52 @@ export default function QuickDocsPage() {
                   }
                   className="w-full rounded-2xl border border-white/10 px-4 py-3 text-sm text-white transition hover:border-white/30"
                 >
-                  + Agregar otro servicio
+                  + {labels.invoiceLabels.addItem}
                 </button>
               </div>
-              <input
-                type="number"
-                value={invoice.taxPercent}
-                onChange={(e) =>
-                  setInvoice((prev) => ({ ...prev, taxPercent: Number(e.target.value) }))
-                }
-                placeholder="Impuesto (%)"
-                className="rounded-2xl border border-white/10 bg-black/50 px-4 py-3 text-sm text-white"
-              />
-              <p className="text-xs text-zinc-500">{labels.invoiceLabels.taxPercent}</p>
-              <input
-                value={invoice.note}
-                onChange={(e) =>
-                  setInvoice((prev) => ({ ...prev, note: e.target.value }))
-                }
-                placeholder="Mensaje final (ej: Gracias por confiar en nosotros)"
-                className="rounded-2xl border border-white/10 bg-black/50 px-4 py-3 text-sm text-white placeholder:text-zinc-500 md:col-span-2"
-              />
-              <p className="text-xs text-zinc-500 md:col-span-2">
-                {labels.invoiceLabels.note}
-              </p>
-              <textarea
-                value={invoice.policy}
-                onChange={(e) =>
-                  setInvoice((prev) => ({ ...prev, policy: e.target.value }))
-                }
-                placeholder="Política general (NY)"
-                className="min-h-[90px] rounded-2xl border border-white/10 bg-black/50 px-4 py-3 text-sm text-white placeholder:text-zinc-500 md:col-span-2"
-              />
-              <p className="text-xs text-zinc-500 md:col-span-2">
-                {labels.invoiceLabels.policy}
-              </p>
+              <div className="flex flex-col gap-2">
+                <label className="text-xs uppercase tracking-wide text-zinc-500">
+                  {labels.invoiceLabels.taxPercent}
+                </label>
+                <input
+                  type="number"
+                  value={invoice.taxPercent}
+                  onChange={(e) =>
+                    setInvoice((prev) => ({
+                      ...prev,
+                      taxPercent: Number(e.target.value),
+                    }))
+                  }
+                  placeholder={labels.invoicePlaceholders.taxPercent}
+                  className="rounded-2xl border border-white/10 bg-black/50 px-4 py-3 text-sm text-white"
+                />
+              </div>
+              <div className="flex flex-col gap-2 md:col-span-2">
+                <label className="text-xs uppercase tracking-wide text-zinc-500">
+                  {labels.invoiceLabels.note}
+                </label>
+                <input
+                  value={invoice.note}
+                  onChange={(e) =>
+                    setInvoice((prev) => ({ ...prev, note: e.target.value }))
+                  }
+                  placeholder={labels.invoicePlaceholders.note}
+                  className="rounded-2xl border border-white/10 bg-black/50 px-4 py-3 text-sm text-white placeholder:text-zinc-500"
+                />
+              </div>
+              <div className="flex flex-col gap-2 md:col-span-2">
+                <label className="text-xs uppercase tracking-wide text-zinc-500">
+                  {labels.invoiceLabels.policy}
+                </label>
+                <textarea
+                  value={invoice.policy}
+                  onChange={(e) =>
+                    setInvoice((prev) => ({ ...prev, policy: e.target.value }))
+                  }
+                  placeholder={labels.invoicePlaceholders.policy}
+                  className="min-h-[90px] rounded-2xl border border-white/10 bg-black/50 px-4 py-3 text-sm text-white placeholder:text-zinc-500"
+                />
+              </div>
               <button
                 onClick={() => previewPdf({ type: "invoice", data: (() => {
                   const items = invoice.items.map((item) => ({
