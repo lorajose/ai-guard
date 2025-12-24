@@ -67,7 +67,7 @@ export async function middleware(req: NextRequest) {
       .some(
         (cookie) =>
           cookie.name.startsWith("sb-") &&
-          cookie.name.endsWith("-auth-token")
+          cookie.name.includes("auth-token")
       );
     if (hasAuthCookie) {
       return res;
