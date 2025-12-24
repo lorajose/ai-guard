@@ -111,6 +111,10 @@ export default function QuickDocsPage() {
         itemUnitPrice: "Precio por unidad",
         taxPercent: "Impuesto (%)",
         note: "Mensaje final",
+        clientPhone: "Teléfono del cliente",
+        clientAddress: "Dirección del cliente",
+        policy: "Política general (NY)",
+        logo: "Logo (puedes cambiarlo)",
       },
     },
     en: {
@@ -150,6 +154,10 @@ export default function QuickDocsPage() {
         itemUnitPrice: "Unit price",
         taxPercent: "Tax (%)",
         note: "Final message",
+        clientPhone: "Client phone",
+        clientAddress: "Client address",
+        policy: "General policy (NY)",
+        logo: "Logo (you can replace it)",
       },
     },
   }[locale];
@@ -183,14 +191,23 @@ export default function QuickDocsPage() {
     issuerEmail: "",
     issuerPhone: "",
     issuerAddress: "",
+    issuerLogoUrl: "/quickdocs/logo-default.svg",
     clientName: "",
     clientEmail: "",
+    clientPhone: "",
+    clientAddress: "",
     dueDate: "",
-    itemDescription: "",
-    itemQuantity: 1,
-    itemUnitPrice: 0,
+    items: [
+      {
+        description: "",
+        quantity: 1,
+        unitPrice: 0,
+      },
+    ],
     taxPercent: 0,
     note: "",
+    policy:
+      "Todas las facturas se rigen por las leyes del Estado de New York. Los pagos vencidos pueden generar cargos por demora.",
     status: "created" as InvoiceData["status"],
   });
 
@@ -240,12 +257,14 @@ export default function QuickDocsPage() {
       {
         key: "details",
         label: labels.invoiceMission.details,
-        done: Boolean(invoice.itemDescription),
+        done: invoice.items.some((item) => item.description),
       },
       {
         key: "payment",
         label: labels.invoiceMission.payment,
-        done: Boolean(invoice.itemUnitPrice > 0 && invoice.itemQuantity > 0),
+        done: invoice.items.some(
+          (item) => item.unitPrice > 0 && item.quantity > 0
+        ),
       },
     ];
     const completed = checkpoints.filter((item) => item.done).length;
@@ -377,7 +396,13 @@ export default function QuickDocsPage() {
   }
 
   function handleInvoiceDownload() {
-    const subtotal = invoice.itemQuantity * invoice.itemUnitPrice;
+    const items = invoice.items.map((item) => ({
+      description: item.description,
+      quantity: item.quantity,
+      unitPrice: item.unitPrice,
+      subtotal: item.quantity * item.unitPrice,
+    }));
+    const subtotal = items.reduce((sum, item) => sum + item.subtotal, 0);
     const taxAmount = (subtotal * invoice.taxPercent) / 100;
     const total = subtotal + taxAmount;
     const data: InvoiceData = {
@@ -393,31 +418,27 @@ export default function QuickDocsPage() {
         email: invoice.issuerEmail,
         phone: invoice.issuerPhone,
         address: invoice.issuerAddress,
-        logoUrl: plan?.isPro ? branding.logoUrl || undefined : undefined,
+        logoUrl: plan?.isPro ? invoice.issuerLogoUrl || undefined : undefined,
       },
       client: {
         name: invoice.clientName,
         email: invoice.clientEmail || undefined,
+        phone: invoice.clientPhone || undefined,
+        address: invoice.clientAddress || undefined,
       },
       invoice: {
         number: invoiceNumber,
         issueDate: today,
         dueDate: invoice.dueDate || today,
       },
-      items: [
-        {
-          description: invoice.itemDescription,
-          quantity: invoice.itemQuantity,
-          unitPrice: invoice.itemUnitPrice,
-          subtotal,
-        },
-      ],
+      items,
       tax: {
         percent: invoice.taxPercent || undefined,
         amount: taxAmount || undefined,
       },
       total: { amount: total, currency: "USD" },
       note: invoice.note || undefined,
+      policy: invoice.policy || undefined,
     };
     downloadPdf({
       type: "invoice",
@@ -690,6 +711,17 @@ export default function QuickDocsPage() {
                 className="rounded-2xl border border-white/10 bg-black/50 px-4 py-3 text-sm text-white placeholder:text-zinc-500"
               />
               <input
+                value={invoice.issuerLogoUrl}
+                onChange={(e) =>
+                  setInvoice((prev) => ({ ...prev, issuerLogoUrl: e.target.value }))
+                }
+                placeholder="Logo (URL)"
+                className="rounded-2xl border border-white/10 bg-black/50 px-4 py-3 text-sm text-white placeholder:text-zinc-500"
+              />
+              <p className="text-xs text-zinc-500 md:col-span-2">
+                {labels.invoiceLabels.logo}
+              </p>
+              <input
                 value={invoice.clientName}
                 onChange={(e) =>
                   setInvoice((prev) => ({ ...prev, clientName: e.target.value }))
@@ -706,6 +738,24 @@ export default function QuickDocsPage() {
                 className="rounded-2xl border border-white/10 bg-black/50 px-4 py-3 text-sm text-white placeholder:text-zinc-500"
               />
               <input
+                value={invoice.clientPhone}
+                onChange={(e) =>
+                  setInvoice((prev) => ({ ...prev, clientPhone: e.target.value }))
+                }
+                placeholder="Teléfono del cliente"
+                className="rounded-2xl border border-white/10 bg-black/50 px-4 py-3 text-sm text-white placeholder:text-zinc-500"
+              />
+              <input
+                value={invoice.clientAddress}
+                onChange={(e) =>
+                  setInvoice((prev) => ({ ...prev, clientAddress: e.target.value }))
+                }
+                placeholder="Dirección del cliente"
+                className="rounded-2xl border border-white/10 bg-black/50 px-4 py-3 text-sm text-white placeholder:text-zinc-500"
+              />
+              <p className="text-xs text-zinc-500">{labels.invoiceLabels.clientPhone}</p>
+              <p className="text-xs text-zinc-500">{labels.invoiceLabels.clientAddress}</p>
+              <input
                 type="date"
                 value={invoice.dueDate}
                 onChange={(e) =>
@@ -713,37 +763,99 @@ export default function QuickDocsPage() {
                 }
                 className="rounded-2xl border border-white/10 bg-black/50 px-4 py-3 text-sm text-white"
               />
-              <input
-                value={invoice.itemDescription}
-                onChange={(e) =>
-                  setInvoice((prev) => ({ ...prev, itemDescription: e.target.value }))
-                }
-                placeholder="Qué entregaste (ej: Diseño de logo + 3 revisiones)"
-                className="rounded-2xl border border-white/10 bg-black/50 px-4 py-3 text-sm text-white placeholder:text-zinc-500 md:col-span-2"
-              />
-              <p className="text-xs text-zinc-500 md:col-span-2">
-                {labels.invoiceLabels.itemDescription}
-              </p>
-              <input
-                type="number"
-                value={invoice.itemQuantity}
-                onChange={(e) =>
-                  setInvoice((prev) => ({ ...prev, itemQuantity: Number(e.target.value) }))
-                }
-                placeholder="Cantidad"
-                className="rounded-2xl border border-white/10 bg-black/50 px-4 py-3 text-sm text-white"
-              />
-              <p className="text-xs text-zinc-500">{labels.invoiceLabels.itemQuantity}</p>
-              <input
-                type="number"
-                value={invoice.itemUnitPrice}
-                onChange={(e) =>
-                  setInvoice((prev) => ({ ...prev, itemUnitPrice: Number(e.target.value) }))
-                }
-                placeholder="Precio por unidad (USD)"
-                className="rounded-2xl border border-white/10 bg-black/50 px-4 py-3 text-sm text-white"
-              />
-              <p className="text-xs text-zinc-500">{labels.invoiceLabels.itemUnitPrice}</p>
+              <div className="flex flex-col gap-3 md:col-span-2">
+                {invoice.items.map((item, index) => (
+                  <div
+                    key={`item-${index}`}
+                    className="grid gap-3 rounded-2xl border border-white/10 bg-black/40 p-3 md:grid-cols-3"
+                  >
+                    <input
+                      value={item.description}
+                      onChange={(e) =>
+                        setInvoice((prev) => ({
+                          ...prev,
+                          items: prev.items.map((entry, idx) =>
+                            idx === index
+                              ? { ...entry, description: e.target.value }
+                              : entry
+                          ),
+                        }))
+                      }
+                      placeholder="Qué entregaste (ej: Diseño de logo + 3 revisiones)"
+                      className="rounded-2xl border border-white/10 bg-black/50 px-4 py-3 text-sm text-white placeholder:text-zinc-500 md:col-span-3"
+                    />
+                    <input
+                      type="number"
+                      value={item.quantity}
+                      onChange={(e) =>
+                        setInvoice((prev) => ({
+                          ...prev,
+                          items: prev.items.map((entry, idx) =>
+                            idx === index
+                              ? { ...entry, quantity: Number(e.target.value) }
+                              : entry
+                          ),
+                        }))
+                      }
+                      placeholder="Cantidad"
+                      className="rounded-2xl border border-white/10 bg-black/50 px-4 py-3 text-sm text-white"
+                    />
+                    <input
+                      type="number"
+                      value={item.unitPrice}
+                      onChange={(e) =>
+                        setInvoice((prev) => ({
+                          ...prev,
+                          items: prev.items.map((entry, idx) =>
+                            idx === index
+                              ? { ...entry, unitPrice: Number(e.target.value) }
+                              : entry
+                          ),
+                        }))
+                      }
+                      placeholder="Precio por unidad (USD)"
+                      className="rounded-2xl border border-white/10 bg-black/50 px-4 py-3 text-sm text-white"
+                    />
+                    <div className="flex items-center justify-between md:col-span-3">
+                      <div className="flex gap-2 text-xs text-zinc-500">
+                        <span>{labels.invoiceLabels.itemDescription}</span>
+                        <span>•</span>
+                        <span>{labels.invoiceLabels.itemQuantity}</span>
+                        <span>•</span>
+                        <span>{labels.invoiceLabels.itemUnitPrice}</span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setInvoice((prev) => ({
+                            ...prev,
+                            items: prev.items.filter((_, idx) => idx !== index),
+                          }))
+                        }
+                        disabled={invoice.items.length === 1}
+                        className="text-xs text-red-300 hover:text-red-200 disabled:opacity-40"
+                      >
+                        Eliminar
+                      </button>
+                    </div>
+                  </div>
+                ))}
+                <button
+                  type="button"
+                  onClick={() =>
+                    setInvoice((prev) => ({
+                      ...prev,
+                      items: [
+                        ...prev.items,
+                        { description: "", quantity: 1, unitPrice: 0 },
+                      ],
+                    }))
+                  }
+                  className="w-full rounded-2xl border border-white/10 px-4 py-3 text-sm text-white transition hover:border-white/30"
+                >
+                  + Agregar otro servicio
+                </button>
+              </div>
               <input
                 type="number"
                 value={invoice.taxPercent}
@@ -765,9 +877,26 @@ export default function QuickDocsPage() {
               <p className="text-xs text-zinc-500 md:col-span-2">
                 {labels.invoiceLabels.note}
               </p>
+              <textarea
+                value={invoice.policy}
+                onChange={(e) =>
+                  setInvoice((prev) => ({ ...prev, policy: e.target.value }))
+                }
+                placeholder="Política general (NY)"
+                className="min-h-[90px] rounded-2xl border border-white/10 bg-black/50 px-4 py-3 text-sm text-white placeholder:text-zinc-500 md:col-span-2"
+              />
+              <p className="text-xs text-zinc-500 md:col-span-2">
+                {labels.invoiceLabels.policy}
+              </p>
               <button
                 onClick={() => previewPdf({ type: "invoice", data: (() => {
-                  const subtotal = invoice.itemQuantity * invoice.itemUnitPrice;
+                  const items = invoice.items.map((item) => ({
+                    description: item.description,
+                    quantity: item.quantity,
+                    unitPrice: item.unitPrice,
+                    subtotal: item.quantity * item.unitPrice,
+                  }));
+                  const subtotal = items.reduce((sum, item) => sum + item.subtotal, 0);
                   const taxAmount = (subtotal * invoice.taxPercent) / 100;
                   const total = subtotal + taxAmount;
                   return {
@@ -783,31 +912,27 @@ export default function QuickDocsPage() {
                       email: invoice.issuerEmail,
                       phone: invoice.issuerPhone,
                       address: invoice.issuerAddress,
-                      logoUrl: plan?.isPro ? branding.logoUrl || undefined : undefined,
+                      logoUrl: plan?.isPro ? invoice.issuerLogoUrl || undefined : undefined,
                     },
                     client: {
                       name: invoice.clientName,
                       email: invoice.clientEmail || undefined,
+                      phone: invoice.clientPhone || undefined,
+                      address: invoice.clientAddress || undefined,
                     },
                     invoice: {
                       number: invoiceNumber,
                       issueDate: today,
                       dueDate: invoice.dueDate || today,
                     },
-                    items: [
-                      {
-                        description: invoice.itemDescription,
-                        quantity: invoice.itemQuantity,
-                        unitPrice: invoice.itemUnitPrice,
-                        subtotal,
-                      },
-                    ],
+                    items,
                     tax: {
                       percent: invoice.taxPercent || undefined,
                       amount: taxAmount || undefined,
                     },
                     total: { amount: total, currency: "USD" },
                     note: invoice.note || undefined,
+                    policy: invoice.policy || undefined,
                   } as InvoiceData;
                 })() })}
                 disabled={loading}

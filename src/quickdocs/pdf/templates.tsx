@@ -216,6 +216,16 @@ export function InvoicePdf({
               {data.client.email}
             </Text>
           )}
+          {data.client.phone && (
+            <Text style={[styles.muted, { color: colors.secondary }]}>
+              {data.client.phone}
+            </Text>
+          )}
+          {data.client.address && (
+            <Text style={[styles.muted, { color: colors.secondary }]}>
+              {data.client.address}
+            </Text>
+          )}
         </View>
 
         <View style={styles.section}>
@@ -294,6 +304,15 @@ export function InvoicePdf({
           <View style={styles.section}>
             <Text style={[styles.label, { color: colors.secondary }]}>Nota</Text>
             <Text>{data.note}</Text>
+          </View>
+        )}
+
+        {data.policy && (
+          <View style={styles.section}>
+            <Text style={[styles.label, { color: colors.secondary }]}>
+              Política de servicios
+            </Text>
+            <Text>{data.policy}</Text>
           </View>
         )}
 
