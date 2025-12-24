@@ -120,6 +120,22 @@ function resolveBranding(branding?: {
   };
 }
 
+function getInvoiceStatusBadge(status?: InvoiceData["status"]) {
+  if (!status) return null;
+  switch (status) {
+    case "created":
+      return { label: "Creada", color: "#0EA5E9" };
+    case "sent":
+      return { label: "Enviada", color: "#F59E0B" };
+    case "waiting":
+      return { label: "Esperando pago", color: "#F97316" };
+    case "paid":
+      return { label: "Pagada", color: "#22C55E" };
+    default:
+      return null;
+  }
+}
+
 function formatMoney(amount: number, currency = "USD") {
   return new Intl.NumberFormat("en-US", {
     style: "currency",
@@ -138,6 +154,7 @@ export function InvoicePdf({
   watermark?: boolean;
 }) {
   const colors = resolveBranding(data.branding);
+  const statusBadge = getInvoiceStatusBadge(data.status);
   return (
     <Document>
       <Page size="LETTER" style={styles.page}>
@@ -161,6 +178,16 @@ export function InvoicePdf({
             <Text style={[styles.title, { color: colors.primary }]}>
               Factura
             </Text>
+            {statusBadge && (
+              <Text
+                style={[
+                  styles.badge,
+                  { backgroundColor: statusBadge.color, marginTop: 6 },
+                ]}
+              >
+                {statusBadge.label}
+              </Text>
+            )}
             <Text>Nº {data.invoice.number}</Text>
             <Text>
               Emisión:{" "}

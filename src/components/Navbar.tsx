@@ -93,9 +93,9 @@ export default function Navbar() {
 
       {/* Links */}
       <div className="hidden md:flex items-center gap-6 text-sm text-zinc-300">
-        <Link href="/dashboard" className="hover:text-white transition">
+        <a href="/dashboard" className="hover:text-white transition">
           {navbarCopy.private.dashboard}
-        </Link>
+        </a>
         <Link href="/pricing" className="hover:text-white transition">
           {navbarCopy.private.pricing}
         </Link>

@@ -58,7 +58,7 @@ export async function GET(request: Request) {
 
     const { data, error } = await supabaseAdmin
       .from("quickdocs_documents")
-      .select("id,type,title,created_at")
+      .select("id,type,title,created_at,payload")
       .eq("user_id", userId)
       .order("created_at", { ascending: false })
       .limit(10);
