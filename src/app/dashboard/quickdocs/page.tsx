@@ -86,6 +86,25 @@ export default function QuickDocsPage() {
       hideBranding: "Quitar marca QuickDocs",
       history: "Historial reciente",
       historyEmpty: "Aún no has generado documentos.",
+      invoiceHeroTitle: "Factura Express",
+      invoiceHeroSubtitle:
+        "Completa la misión en 60 segundos: una factura moderna, clara y lista para cobrar.",
+      invoiceProgressLabel: "Progreso",
+      invoiceNextLabel: "Siguiente objetivo",
+      invoiceStatusLabel: "Ruta de cobro",
+      invoiceStatus: {
+        created: "Creada",
+        sent: "Enviada",
+        waiting: "En espera de pago",
+        paid: "Pagada",
+      },
+      invoiceMission: {
+        issuer: "Tu marca y contacto",
+        client: "Cliente que paga",
+        details: "Servicio y precio",
+        payment: "Fecha límite",
+        final: "Factura lista",
+      },
     },
     en: {
       preview: "Preview",
@@ -99,6 +118,25 @@ export default function QuickDocsPage() {
       hideBranding: "Remove QuickDocs branding",
       history: "Recent history",
       historyEmpty: "No documents yet.",
+      invoiceHeroTitle: "Invoice Sprint",
+      invoiceHeroSubtitle:
+        "Complete the mission in 60 seconds: a modern invoice that gets you paid.",
+      invoiceProgressLabel: "Progress",
+      invoiceNextLabel: "Next target",
+      invoiceStatusLabel: "Payment route",
+      invoiceStatus: {
+        created: "Created",
+        sent: "Sent",
+        waiting: "Waiting on payment",
+        paid: "Paid",
+      },
+      invoiceMission: {
+        issuer: "Brand & contact",
+        client: "Paying client",
+        details: "Service & price",
+        payment: "Due date",
+        final: "Invoice ready",
+      },
     },
   }[locale];
 
@@ -106,7 +144,13 @@ export default function QuickDocsPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [history, setHistory] = useState<
-    { id: string; type: string; title: string; created_at: string }[]
+    {
+      id: string;
+      type: string;
+      title: string;
+      created_at: string;
+      payload?: { status?: InvoiceData["status"] };
+    }[]
   >([]);
   const [plan, setPlan] = useState<{ plan: string; isPro: boolean } | null>(null);
   const [branding, setBranding] = useState({
@@ -133,6 +177,7 @@ export default function QuickDocsPage() {
     itemUnitPrice: 0,
     taxPercent: 0,
     note: "",
+    status: "created" as InvoiceData["status"],
   });
 
   const [proposal, setProposal] = useState({
@@ -165,6 +210,44 @@ export default function QuickDocsPage() {
     signerName: "",
     signDate: "",
   });
+
+  const invoiceProgress = useMemo(() => {
+    const checkpoints = [
+      {
+        key: "issuer",
+        label: labels.invoiceMission.issuer,
+        done: Boolean(invoice.issuerName && invoice.issuerEmail),
+      },
+      {
+        key: "client",
+        label: labels.invoiceMission.client,
+        done: Boolean(invoice.clientName),
+      },
+      {
+        key: "details",
+        label: labels.invoiceMission.details,
+        done: Boolean(invoice.itemDescription),
+      },
+      {
+        key: "payment",
+        label: labels.invoiceMission.payment,
+        done: Boolean(invoice.itemUnitPrice > 0 && invoice.itemQuantity > 0),
+      },
+    ];
+    const completed = checkpoints.filter((item) => item.done).length;
+    const percent = Math.round((completed / checkpoints.length) * 100);
+    const next =
+      checkpoints.find((item) => !item.done)?.label ||
+      labels.invoiceMission.final;
+    return { checkpoints, completed, percent, next };
+  }, [invoice, labels.invoiceMission]);
+
+  const statusOptions = [
+    { id: "created", label: labels.invoiceStatus.created },
+    { id: "sent", label: labels.invoiceStatus.sent },
+    { id: "waiting", label: labels.invoiceStatus.waiting },
+    { id: "paid", label: labels.invoiceStatus.paid },
+  ] as const;
 
   useEffect(() => {
     async function loadPlan() {
@@ -290,6 +373,7 @@ export default function QuickDocsPage() {
             secondaryColor: branding.secondaryColor,
           }
         : undefined,
+      status: invoice.status,
       issuer: {
         name: invoice.issuerName,
         email: invoice.issuerEmail,
@@ -454,12 +538,117 @@ export default function QuickDocsPage() {
 
           {tab === "invoice" && (
             <div className="mt-6 grid gap-4 md:grid-cols-2">
+              <div className="rounded-2xl border border-white/10 bg-black/60 p-4 md:col-span-2">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <div>
+                    <p className="text-xs uppercase tracking-[0.3em] text-zinc-500">
+                      {labels.invoiceHeroTitle}
+                    </p>
+                    <p className="mt-2 text-sm text-zinc-300">
+                      {labels.invoiceHeroSubtitle}
+                    </p>
+                  </div>
+                  <div className="rounded-full border border-white/10 bg-black/70 px-4 py-2 text-xs text-zinc-300">
+                    {labels.invoiceProgressLabel}:{" "}
+                    <span className="text-white">
+                      {invoiceProgress.percent}%
+                    </span>
+                  </div>
+                </div>
+                <div className="mt-4 h-2 w-full overflow-hidden rounded-full bg-white/10">
+                  <div
+                    className="h-full rounded-full bg-neonGreen transition-all"
+                    style={{ width: `${invoiceProgress.percent}%` }}
+                  />
+                </div>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {invoiceProgress.checkpoints.map((checkpoint) => (
+                    <span
+                      key={checkpoint.key}
+                      className={`rounded-full border px-3 py-1 text-xs ${
+                        checkpoint.done
+                          ? "border-neonGreen/40 bg-neonGreen/10 text-neonGreen"
+                          : "border-white/10 text-zinc-400"
+                      }`}
+                    >
+                      {checkpoint.label}
+                    </span>
+                  ))}
+                </div>
+                <p className="mt-3 text-xs text-zinc-400">
+                  {labels.invoiceNextLabel}:{" "}
+                  <span className="text-white">{invoiceProgress.next}</span>
+                </p>
+              </div>
+
+              <div className="rounded-2xl border border-white/10 bg-black/60 p-4 md:col-span-2">
+                <p className="text-xs uppercase tracking-wide text-zinc-500">
+                  {labels.invoiceStatusLabel}
+                </p>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {statusOptions.map((option) => (
+                    <button
+                      key={option.id}
+                      type="button"
+                      onClick={() =>
+                        setInvoice((prev) => ({
+                          ...prev,
+                          status: option.id,
+                        }))
+                      }
+                      className={`rounded-full border px-4 py-2 text-xs font-semibold transition ${
+                        invoice.status === option.id
+                          ? "border-neonGreen bg-neonGreen text-white"
+                          : "border-white/10 text-zinc-300 hover:border-white/30"
+                      }`}
+                    >
+                      {option.label}
+                    </button>
+                  ))}
+                </div>
+                <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
+                  {statusOptions.map((option, index) => {
+                    const isActive = invoice.status === option.id;
+                    const isDone =
+                      statusOptions.findIndex(
+                        (item) => item.id === invoice.status
+                      ) >= index;
+                    return (
+                      <div
+                        key={option.id}
+                        className="flex items-center gap-2"
+                      >
+                        <div
+                          className={`flex h-8 w-8 items-center justify-center rounded-full border text-xs font-semibold ${
+                            isActive
+                              ? "border-neonGreen bg-neonGreen text-white"
+                              : isDone
+                              ? "border-neonGreen/40 bg-neonGreen/10 text-neonGreen"
+                              : "border-white/10 text-zinc-500"
+                          }`}
+                        >
+                          {option.id === "created" && "✅"}
+                          {option.id === "sent" && "📨"}
+                          {option.id === "waiting" && "⏳"}
+                          {option.id === "paid" && "💰"}
+                        </div>
+                        <div className="text-xs text-zinc-300">
+                          {option.label}
+                        </div>
+                        {index < statusOptions.length - 1 && (
+                          <div className="h-6 w-px bg-white/10 sm:h-px sm:w-8" />
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
               <input
                 value={invoice.issuerName}
                 onChange={(e) =>
                   setInvoice((prev) => ({ ...prev, issuerName: e.target.value }))
                 }
-                placeholder="Nombre empresa / profesional"
+                placeholder="Tu nombre o marca (ej: Studio Rivera)"
                 className="rounded-2xl border border-white/10 bg-black/50 px-4 py-3 text-sm text-white placeholder:text-zinc-500"
               />
               <input
@@ -467,7 +656,7 @@ export default function QuickDocsPage() {
                 onChange={(e) =>
                   setInvoice((prev) => ({ ...prev, issuerEmail: e.target.value }))
                 }
-                placeholder="Email"
+                placeholder="Correo para cobrar (ej: hola@tuempresa.com)"
                 className="rounded-2xl border border-white/10 bg-black/50 px-4 py-3 text-sm text-white placeholder:text-zinc-500"
               />
               <input
@@ -475,7 +664,7 @@ export default function QuickDocsPage() {
                 onChange={(e) =>
                   setInvoice((prev) => ({ ...prev, issuerPhone: e.target.value }))
                 }
-                placeholder="Teléfono"
+                placeholder="Teléfono / WhatsApp"
                 className="rounded-2xl border border-white/10 bg-black/50 px-4 py-3 text-sm text-white placeholder:text-zinc-500"
               />
               <input
@@ -483,7 +672,7 @@ export default function QuickDocsPage() {
                 onChange={(e) =>
                   setInvoice((prev) => ({ ...prev, issuerAddress: e.target.value }))
                 }
-                placeholder="Dirección"
+                placeholder="Dirección comercial (opcional)"
                 className="rounded-2xl border border-white/10 bg-black/50 px-4 py-3 text-sm text-white placeholder:text-zinc-500"
               />
               <input
@@ -491,7 +680,7 @@ export default function QuickDocsPage() {
                 onChange={(e) =>
                   setInvoice((prev) => ({ ...prev, clientName: e.target.value }))
                 }
-                placeholder="Nombre del cliente"
+                placeholder="Cliente que paga (ej: Carlos Pérez)"
                 className="rounded-2xl border border-white/10 bg-black/50 px-4 py-3 text-sm text-white placeholder:text-zinc-500"
               />
               <input
@@ -499,7 +688,7 @@ export default function QuickDocsPage() {
                 onChange={(e) =>
                   setInvoice((prev) => ({ ...prev, clientEmail: e.target.value }))
                 }
-                placeholder="Email del cliente (opcional)"
+                placeholder="Email del cliente (para enviar la factura)"
                 className="rounded-2xl border border-white/10 bg-black/50 px-4 py-3 text-sm text-white placeholder:text-zinc-500"
               />
               <input
@@ -515,7 +704,7 @@ export default function QuickDocsPage() {
                 onChange={(e) =>
                   setInvoice((prev) => ({ ...prev, itemDescription: e.target.value }))
                 }
-                placeholder="Descripción del ítem"
+                placeholder="Qué entregaste (ej: Diseño de logo + 3 revisiones)"
                 className="rounded-2xl border border-white/10 bg-black/50 px-4 py-3 text-sm text-white placeholder:text-zinc-500 md:col-span-2"
               />
               <input
@@ -533,7 +722,7 @@ export default function QuickDocsPage() {
                 onChange={(e) =>
                   setInvoice((prev) => ({ ...prev, itemUnitPrice: Number(e.target.value) }))
                 }
-                placeholder="Precio unitario"
+                placeholder="Precio por unidad (USD)"
                 className="rounded-2xl border border-white/10 bg-black/50 px-4 py-3 text-sm text-white"
               />
               <input
@@ -550,7 +739,7 @@ export default function QuickDocsPage() {
                 onChange={(e) =>
                   setInvoice((prev) => ({ ...prev, note: e.target.value }))
                 }
-                placeholder="Nota final"
+                placeholder="Mensaje final (ej: Gracias por confiar en nosotros)"
                 className="rounded-2xl border border-white/10 bg-black/50 px-4 py-3 text-sm text-white placeholder:text-zinc-500 md:col-span-2"
               />
               <button
@@ -565,6 +754,7 @@ export default function QuickDocsPage() {
                           secondaryColor: branding.secondaryColor,
                         }
                       : undefined,
+                    status: invoice.status,
                     issuer: {
                       name: invoice.issuerName,
                       email: invoice.issuerEmail,
@@ -990,6 +1180,11 @@ export default function QuickDocsPage() {
                 <p className="text-xs text-zinc-400">
                   {item.type} · {new Date(item.created_at).toLocaleString()}
                 </p>
+                {item.payload?.status && (
+                  <span className="w-fit rounded-full border border-white/10 bg-black/60 px-2 py-0.5 text-[11px] text-zinc-300">
+                    {labels.invoiceStatus[item.payload.status]}
+                  </span>
+                )}
               </div>
             ))}
           </div>

@@ -16,6 +16,7 @@ export type InvoiceItem = {
 };
 
 export type InvoiceData = {
+  status?: "created" | "sent" | "waiting" | "paid";
   branding?: DocumentBranding;
   issuer: {
     name: string;
