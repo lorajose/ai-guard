@@ -24,6 +24,8 @@ export async function GET(request: Request) {
   );
 
   await supabase.auth.signOut();
+  cookieStore.delete({ name: "sb-access-token" });
+  cookieStore.delete({ name: "sb-refresh-token" });
 
   const destination = redirectTarget.startsWith("http")
     ? redirectTarget
