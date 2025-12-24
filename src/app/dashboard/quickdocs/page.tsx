@@ -105,6 +105,13 @@ export default function QuickDocsPage() {
         payment: "Fecha límite",
         final: "Factura lista",
       },
+      invoiceLabels: {
+        itemDescription: "Descripción del servicio",
+        itemQuantity: "Cantidad",
+        itemUnitPrice: "Precio por unidad",
+        taxPercent: "Impuesto (%)",
+        note: "Mensaje final",
+      },
     },
     en: {
       preview: "Preview",
@@ -136,6 +143,13 @@ export default function QuickDocsPage() {
         details: "Service & price",
         payment: "Due date",
         final: "Invoice ready",
+      },
+      invoiceLabels: {
+        itemDescription: "Service description",
+        itemQuantity: "Quantity",
+        itemUnitPrice: "Unit price",
+        taxPercent: "Tax (%)",
+        note: "Final message",
       },
     },
   }[locale];
@@ -707,6 +721,9 @@ export default function QuickDocsPage() {
                 placeholder="Qué entregaste (ej: Diseño de logo + 3 revisiones)"
                 className="rounded-2xl border border-white/10 bg-black/50 px-4 py-3 text-sm text-white placeholder:text-zinc-500 md:col-span-2"
               />
+              <p className="text-xs text-zinc-500 md:col-span-2">
+                {labels.invoiceLabels.itemDescription}
+              </p>
               <input
                 type="number"
                 value={invoice.itemQuantity}
@@ -716,6 +733,7 @@ export default function QuickDocsPage() {
                 placeholder="Cantidad"
                 className="rounded-2xl border border-white/10 bg-black/50 px-4 py-3 text-sm text-white"
               />
+              <p className="text-xs text-zinc-500">{labels.invoiceLabels.itemQuantity}</p>
               <input
                 type="number"
                 value={invoice.itemUnitPrice}
@@ -725,6 +743,7 @@ export default function QuickDocsPage() {
                 placeholder="Precio por unidad (USD)"
                 className="rounded-2xl border border-white/10 bg-black/50 px-4 py-3 text-sm text-white"
               />
+              <p className="text-xs text-zinc-500">{labels.invoiceLabels.itemUnitPrice}</p>
               <input
                 type="number"
                 value={invoice.taxPercent}
@@ -734,6 +753,7 @@ export default function QuickDocsPage() {
                 placeholder="Impuesto (%)"
                 className="rounded-2xl border border-white/10 bg-black/50 px-4 py-3 text-sm text-white"
               />
+              <p className="text-xs text-zinc-500">{labels.invoiceLabels.taxPercent}</p>
               <input
                 value={invoice.note}
                 onChange={(e) =>
@@ -742,6 +762,9 @@ export default function QuickDocsPage() {
                 placeholder="Mensaje final (ej: Gracias por confiar en nosotros)"
                 className="rounded-2xl border border-white/10 bg-black/50 px-4 py-3 text-sm text-white placeholder:text-zinc-500 md:col-span-2"
               />
+              <p className="text-xs text-zinc-500 md:col-span-2">
+                {labels.invoiceLabels.note}
+              </p>
               <button
                 onClick={() => previewPdf({ type: "invoice", data: (() => {
                   const subtotal = invoice.itemQuantity * invoice.itemUnitPrice;
