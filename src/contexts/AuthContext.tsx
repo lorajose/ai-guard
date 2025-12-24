@@ -36,9 +36,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     async function hydrateUser() {
       const {
-        data: { user: currentUser },
-      } = await supabase.auth.getUser();
-      setUser(currentUser);
+        data: { session },
+      } = await supabase.auth.getSession();
+      setUser(session?.user ?? null);
+      if (session?.access_token && session?.refresh_token) {
+        fetch("/api/auth/session", {
+          method: "POST",
+          credentials: "include",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            access_token: session.access_token,
+            refresh_token: session.refresh_token,
+          }),
+        }).catch((error) =>
+          console.warn("Failed to sync auth session", error)
+        );
+      }
       setInitializing(false);
     }
 
