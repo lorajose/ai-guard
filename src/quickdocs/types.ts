@@ -28,6 +28,8 @@ export type InvoiceData = {
   client: {
     name: string;
     email?: string;
+    phone?: string;
+    address?: string;
   };
   invoice: {
     number: string;
@@ -41,6 +43,7 @@ export type InvoiceData = {
   };
   total: Money;
   note?: string;
+  policy?: string;
 };
 
 export type ProposalService = {
